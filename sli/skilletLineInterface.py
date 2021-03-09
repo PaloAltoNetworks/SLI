@@ -72,22 +72,23 @@ class SkilletLineInterface():
     def _connectivity_vars(self):
         """Populate context with vars required for NGFW connectivity"""
 
-        self.context['TARGET_IP'] = self.options['device'] if self.options['device'] else input('Device: ')
-        self.context['TARGET_USERNAME'] = self.options['username'] if self.options['username'] else input('Username: ')
-        self.context['TARGET_PASSWORD'] = self.options['password'] if self.options['password'] else getpass()
+        self.context['TARGET_IP'] = self.options['device'] if self.options.get('device') else input('Device: ')
+        self.context['TARGET_USERNAME'] = self.options['username'] if self.options.get('username') else input('Username: ')
+        self.context['TARGET_PASSWORD'] = self.options['password'] if self.options.get('password') else getpass()
     
     def execute(self):
         """SLI action, execute a single or several skillets"""
 
         # Gather input parameters and load skillet
         self._connectivity_vars()
-        if not self.options['name'] and len(self.skillets) > 1:
+        if not self.options.get('name') and len(self.skillets) > 1:
             print('Specify a skillet to run with --name when more than 1 is present')
             exit(1)
         target_name = self.options['name'] if self.options['name'] else self.skillets[0].name
         skillet = self.sl.get_skillet_with_name(target_name)
         if skillet is None:
             print(f'Unable to load skillet {target_name} by name')
+            exit(1)
 
         # Execute skillet and process output
         print('Running skillet ' + target_name)
