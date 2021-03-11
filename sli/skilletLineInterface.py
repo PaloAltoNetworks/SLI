@@ -9,6 +9,7 @@ class SkilletLineInterface():
         self.sl = SkilletLoader()
         self._load_skillets()
         self.context = {}
+        self.skillet = None # Active running skillet
     
     def _load_skillets(self):
         self.skillets = self.sl.load_all_skillets_from_dir('./')
@@ -35,7 +36,7 @@ class SkilletLineInterface():
             }
         )
     
-    def _pan_validation_output(self, exe, skillet):
+    def _pan_validation_output(self, exe):
         """Format and display output for validation skillets"""
 
         # Verbose information
@@ -43,6 +44,10 @@ class SkilletLineInterface():
         for snippet_name in exe['pan_validation']:
             snippet = exe['pan_validation'][snippet_name]
             print(snippet_name)
+            print('-'*len(snippet_name))
+            if 'results' in snippet:
+                result = "Passed" if snippet['results'] else "Failed"
+                print(f"   Validation Results: {result}")
             print(f"   Label: {snippet['label']}")
             print(f"   Output: {snippet['output_message']}")
             documentation_link = snippet.get('documentation_link')
@@ -76,23 +81,49 @@ class SkilletLineInterface():
         self.context['TARGET_USERNAME'] = self.options['username'] if self.options.get('username') else input('Username: ')
         self.context['TARGET_PASSWORD'] = self.options['password'] if self.options.get('password') else getpass()
     
+    def _load_check(self):
+        if len(self.skillets) < 1:
+            print("No skillets were loaded.")
+            exit(1)
+
+    def _execute_pan_validation(self):
+        """Skillet was already determined to be of type pan_validation, execute it"""
+
+        # Execute skillet and process output
+        exe = self.skillet.execute(self.context)
+
+        if self.skillet.type == 'pan_validation':
+            self._pan_validation_output(exe)
+        
+        # Generate a panforge formatted report if able
+        self._generate_panforge_report(exe)
+
+    def _generate_panforge_report(self, exe):
+        """Generate a panforge formatted report if required"""
+        if not self.options.get('report'):
+            return
+        print('Generating report')
+
+    
     def execute(self):
         """SLI action, execute a single or several skillets"""
 
         # Gather input parameters and load skillet
         self._connectivity_vars()
+        self._load_check()
         if not self.options.get('name') and len(self.skillets) > 1:
             print('Specify a skillet to run with --name when more than 1 is present')
             exit(1)
         target_name = self.options['name'] if self.options['name'] else self.skillets[0].name
-        skillet = self.sl.get_skillet_with_name(target_name)
-        if skillet is None:
+        self.skillet = self.sl.get_skillet_with_name(target_name)
+        if self.skillet is None:
             print(f'Unable to load skillet {target_name} by name')
             exit(1)
 
-        # Execute skillet and process output
-        print('Running skillet ' + target_name)
-        exe = skillet.execute(self.context)
-
-        if skillet.type == 'pan_validation':
-            self._pan_validation_output(exe, skillet)
+        if self.skillet.type == 'pan_validation':
+            print('Running validation skillet ' + target_name)
+            self._execute_pan_validation()
+        else:
+            print('Unsupported skillet type - ' + self.skillet.type)
+            exit(1)
+        exit()

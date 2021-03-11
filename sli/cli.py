@@ -9,6 +9,7 @@ from sli.tools import load_config_file
 @click.option("-u", "--username", help="Device username")
 @click.option("-p", "--password", help="Device password")
 @click.option("-n", "--name", help="Name of skillet to execute")
+@click.option("-r", "--report", is_flag=True, help="Generate a panforge formatted report")
 @click.argument("action", nargs=1, default="execute")
 def cli(action, **kwargs):
 
