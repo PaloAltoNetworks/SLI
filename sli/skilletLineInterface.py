@@ -1,6 +1,8 @@
 from skilletlib import SkilletLoader
 from sli.tools import print_table
 from getpass import getpass
+from panforge import Report
+import os
 
 class SkilletLineInterface():
 
@@ -12,7 +14,7 @@ class SkilletLineInterface():
         self.skillet = None # Active running skillet
     
     def _load_skillets(self):
-        self.skillets = self.sl.load_all_skillets_from_dir('./')
+        self.skillets = self.sl.load_all_skillets_from_dir(self.options.get('directory', './'))
         if len(self.sl.skillet_errors) > 0:
             print('Errors on loading skillets:')
             for err in self.sl.skillet_errors:
@@ -102,8 +104,20 @@ class SkilletLineInterface():
         """Generate a panforge formatted report if required"""
         if not self.options.get('report'):
             return
-        print('Generating report')
-
+        try:
+            report = Report(self.skillet.path + os.path.sep + 'report')
+        except FileNotFoundError:
+            print(f'Report flag specified and report.yml file not found for {self.skillet.name}')
+            return
+        report.load_header({
+            'Host': self.options['device']
+        })
+        report_context = exe['pan_validation']
+        report_context['description'] = self.skillet.description
+        report.load_data(report_context)
+        report_html = report.render_html()
+        with open('report.html', 'w') as f:
+            f.write(report.html)
     
     def execute(self):
         """SLI action, execute a single or several skillets"""

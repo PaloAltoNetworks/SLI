@@ -6,6 +6,7 @@ from sli.tools import load_config_file
 @click.command()
 @click.option("-c", "--config", help="Configuration file")
 @click.option("-d", "--device", help="Device IP or hostname")
+@click.option("-sd", "--directory", help="Directory to load skillets from", default="./")
 @click.option("-u", "--username", help="Device username")
 @click.option("-p", "--password", help="Device password")
 @click.option("-n", "--name", help="Name of skillet to execute")
@@ -27,3 +28,7 @@ def cli(action, **kwargs):
     # Instantiate skillet and execute command
     sli = SkilletLineInterface(config_obj)
     getattr(sli, action)()
+
+
+if __name__ == "__main__":
+    cli()
