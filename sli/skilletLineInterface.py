@@ -113,7 +113,6 @@ class SkilletLineInterface():
             'Host': self.options['device']
         })
         report_context = exe['pan_validation']
-        report_context['description'] = self.skillet.description
         report.load_data(report_context)
         report_html = report.render_html()
         with open('report.html', 'w') as f:
