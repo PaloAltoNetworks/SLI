@@ -1,5 +1,4 @@
 import click
-
 from sli.skilletLineInterface import SkilletLineInterface
 from sli.tools import load_config_file
 
@@ -20,14 +19,9 @@ def cli(action, **kwargs):
         if kwargs[key] is not None:
             config_obj[key] = kwargs[key]
 
-    actions = ['execute', 'test_load']
-    if not action in actions:
-        ctx = click.get_current_context()
-        ctx.fail(f"Invalid action - {action}")
-
     # Instantiate skillet and execute command
-    sli = SkilletLineInterface(config_obj)
-    getattr(sli, action)()
+    sli = SkilletLineInterface(config_obj, action)
+    sli.run_command()
 
 
 if __name__ == "__main__":

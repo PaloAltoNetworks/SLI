@@ -4,14 +4,46 @@ from getpass import getpass
 from panforge import Report
 import os
 
+from sli import commands
+from types import ModuleType
+
 class SkilletLineInterface():
 
-    def __init__(self, options):
+    def __init__(self, options, action):
+        self.action = action
         self.options = options
+        self.command_map = {}
+        self._load_commands()
+        self._verify_command()
         self.sl = SkilletLoader()
         self._load_skillets()
         self.context = {}
         self.skillet = None # Active running skillet
+    
+    def _load_commands(self):
+        """
+        Loads a list of commands from the sli.commands package. Does so by iterating over contents of the
+        package and locating types of 'type' that have an sli_command specified.
+        """
+        for item in dir(commands):
+            item_obj = getattr(commands, item)
+            if isinstance(item_obj, ModuleType):
+                for item_attr in dir(item_obj):
+                    item_attr_obj = getattr(item_obj, item_attr)
+                    if isinstance(item_attr_obj, type):
+                        command_string = getattr(item_attr_obj, 'sli_command', '')
+                        if len(command_string) > 0:
+                            if issubclass(item_attr_obj, commands.BaseCommand) and item_attr_obj is not commands.BaseCommand:
+                                self.command_map[command_string] = item_attr_obj
+    
+    def _verify_command(self):
+        if not self.action in self.command_map:
+            print('Invalid action')
+            exit(1)
+
+    def run_command(self):
+        action_obj = self.command_map[self.action](self)
+        action_obj.execute()
     
     def _load_skillets(self):
         self.skillets = self.sl.load_all_skillets_from_dir(self.options.get('directory', './'))
@@ -21,23 +53,6 @@ class SkilletLineInterface():
                 for key in err:
                     print(f"   {key} - {err[key]}")
 
-    def test_load(self):
-        """SLI action, test load all skillets in directory and print out loaded skillets"""
-        objs = []
-        for s in self.skillets:
-            obj = {
-                'name': s.name,
-                'type': s.type,
-            }
-            objs.append(obj)
-        print_table(
-            objs,
-            {
-                "Name": "name",
-                "Type": "type",
-            }
-        )
-    
     def _pan_validation_output(self, exe):
         """Format and display output for validation skillets"""
 
@@ -84,6 +99,7 @@ class SkilletLineInterface():
         self.context['TARGET_PASSWORD'] = self.options['password'] if self.options.get('password') else getpass()
     
     def _load_check(self):
+        """Perform any pre-execution validations against loaded skillets"""
         if len(self.skillets) < 1:
             print("No skillets were loaded.")
             exit(1)
