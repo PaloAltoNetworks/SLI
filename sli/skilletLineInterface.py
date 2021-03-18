@@ -12,6 +12,7 @@ class SkilletLineInterface():
     def __init__(self, options, action):
         self.action = action
         self.options = options
+        self.verbose = options.get('verbose', False)
         self.command_map = {}
         self._load_commands()
         self._verify_command()
@@ -58,61 +59,12 @@ class SkilletLineInterface():
                 for key in err:
                     print(f"   {key} - {err[key]}")
 
-    def _pan_validation_output(self, exe):
-        """Format and display output for validation skillets"""
-
-        # Verbose information
-        print('Validation details\n------------------')
-        for snippet_name in exe['pan_validation']:
-            snippet = exe['pan_validation'][snippet_name]
-            print(snippet_name)
-            print('-'*len(snippet_name))
-            if 'results' in snippet:
-                result = "Passed" if snippet['results'] else "Failed"
-                print(f"   Validation Results: {result}")
-            print(f"   Label: {snippet['label']}")
-            print(f"   Output: {snippet['output_message']}")
-            documentation_link = snippet.get('documentation_link')
-            if documentation_link:
-                print(f"   Documentation Link: {documentation_link}")
-            if isinstance(snippet['meta'], dict):
-                print('   Meta:')
-                for key in snippet['meta']:
-                    print(f"      {key}: {snippet['meta'][key]}")
-            print()
-        
-        # Results
-        results =[
-            {
-                'name':x,
-                'result': "Passed" if exe['snippets'][x] else "Failed"
-            }
-            for x in exe['snippets']
-        ]
-        print('Validation results\n------------------')
-        print_table(results, {
-            "Name": "name",
-            "Result": "result"
-        })
-
     def _verify_loaded_skillets(self):
         """Perform any pre-execution validations against loaded skillets"""
 
         if len(self.skillets) < 1:
             print("No skillets were loaded.")
             exit(1)
-
-    def _execute_pan_validation(self):
-        """Skillet was already determined to be of type pan_validation, execute it"""
-
-        # Execute skillet and process output
-        exe = self.skillet.execute(self.context)
-
-        if self.skillet.type == 'pan_validation':
-            self._pan_validation_output(exe)
-        
-        # Generate a panforge formatted report if able
-        self._generate_panforge_report(exe)
 
     def _generate_panforge_report(self, exe):
         """Generate a panforge formatted report if required"""
