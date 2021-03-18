@@ -26,23 +26,31 @@ class SkilletLineInterface():
         Loads a list of commands from the sli.commands package. Does so by iterating over contents of the
         package and locating types of 'type' that have an sli_command specified.
         """
+
+        # Go through each module in the commands package
         for item in dir(commands):
             item_obj = getattr(commands, item)
             if isinstance(item_obj, ModuleType):
+
+                # Get only the attributes which are classes
                 for item_attr in dir(item_obj):
                     item_attr_obj = getattr(item_obj, item_attr)
                     if isinstance(item_attr_obj, type):
+
+                        # Load only SLI command modules that are appropriately written
                         command_string = getattr(item_attr_obj, 'sli_command', '')
                         if len(command_string) > 0:
                             if issubclass(item_attr_obj, commands.BaseCommand) and item_attr_obj is not commands.BaseCommand:
                                 self.command_map[command_string] = item_attr_obj
     
     def _verify_command(self):
+        """Called in __init__ to verify a submitted command is valid before running SkilletLoader"""
         if not self.action in self.command_map:
             print('Invalid action')
             exit(1)
 
     def _load_skillets(self):
+        """Called in __init__ to front end SkilletLoader"""
         self.skillets = self.sl.load_all_skillets_from_dir(self.options.get('directory', './'))
         if len(self.sl.skillet_errors) > 0:
             print('Errors on loading skillets:')
