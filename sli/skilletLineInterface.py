@@ -17,6 +17,7 @@ class SkilletLineInterface():
         self._verify_command()
         self.sl = SkilletLoader()
         self._load_skillets()
+        self._verify_loaded_skillets()
         self.context = {}
         self.skillet = None # Active running skillet
     
@@ -41,10 +42,6 @@ class SkilletLineInterface():
             print('Invalid action')
             exit(1)
 
-    def run_command(self):
-        action_obj = self.command_map[self.action](self)
-        action_obj.execute()
-    
     def _load_skillets(self):
         self.skillets = self.sl.load_all_skillets_from_dir(self.options.get('directory', './'))
         if len(self.sl.skillet_errors) > 0:
@@ -90,16 +87,9 @@ class SkilletLineInterface():
             "Result": "result"
         })
 
-
-    def _connectivity_vars(self):
-        """Populate context with vars required for NGFW connectivity"""
-
-        self.context['TARGET_IP'] = self.options['device'] if self.options.get('device') else input('Device: ')
-        self.context['TARGET_USERNAME'] = self.options['username'] if self.options.get('username') else input('Username: ')
-        self.context['TARGET_PASSWORD'] = self.options['password'] if self.options.get('password') else getpass()
-    
-    def _load_check(self):
+    def _verify_loaded_skillets(self):
         """Perform any pre-execution validations against loaded skillets"""
+
         if len(self.skillets) < 1:
             print("No skillets were loaded.")
             exit(1)
@@ -133,26 +123,12 @@ class SkilletLineInterface():
         report_html = report.render_html()
         with open('report.html', 'w') as f:
             f.write(report.html)
-    
-    def execute(self):
-        """SLI action, execute a single or several skillets"""
 
-        # Gather input parameters and load skillet
-        self._connectivity_vars()
-        self._load_check()
-        if not self.options.get('name') and len(self.skillets) > 1:
-            print('Specify a skillet to run with --name when more than 1 is present')
-            exit(1)
-        target_name = self.options['name'] if self.options['name'] else self.skillets[0].name
-        self.skillet = self.sl.get_skillet_with_name(target_name)
-        if self.skillet is None:
-            print(f'Unable to load skillet {target_name} by name')
-            exit(1)
+    def run_command(self):
+        """Run supplied SLI command"""
 
-        if self.skillet.type == 'pan_validation':
-            print('Running validation skillet ' + target_name)
-            self._execute_pan_validation()
-        else:
-            print('Unsupported skillet type - ' + self.skillet.type)
-            exit(1)
-        exit()
+        action_obj = self.command_map[self.action](self)
+        action_obj.execute()
+
+        # Clean run, normal exit
+        exit(0)
