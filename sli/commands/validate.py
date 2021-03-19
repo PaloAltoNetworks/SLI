@@ -1,5 +1,6 @@
+import os
 from .base import BaseCommand
-from sli.tools import print_table
+from sli.tools import print_table, generate_report
 from sli.decorators import (
     require_ngfw_connection_params,
     require_single_skillet,
@@ -28,6 +29,14 @@ class ValidateCommand(BaseCommand):
         if self.sli.verbose:
             self.print_verbose(exe)
         self.print_summary(exe)
+
+        if self.sli.generate_report:
+            header = {'Host': self.sli.options['device']}
+            out_file = getattr(self.sli, 'report_file', '')
+            if len(out_file) < 1:
+                out_file = f'{self.sli.options["device"]}-{self.sli.skillet.name}.html'
+            report_dir = os.path.sep.join([self.sli.skillet.path, 'report'])
+            generate_report(out_file, exe['pan_validation'], report_dir, header=header)
 
     def print_verbose(self, exe):
         print('Validation details\n------------------')

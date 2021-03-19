@@ -5,9 +5,8 @@ class BaseCommand():
 
     def execute(self):
         """SLI starts here to call the run function"""
-        print('Running execute')
         self.run()
 
     def run(self):
         """ Should be overridden by child classes"""
-        pass
+        print('This module has not been implemented')

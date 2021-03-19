@@ -11,6 +11,7 @@ from sli.tools import load_config_file
 @click.option("-p", "--password", help="Device password")
 @click.option("-n", "--name", help="Name of skillet to execute")
 @click.option("-r", "--report", is_flag=True, help="Generate a panforge formatted report")
+@click.option("-rf", "--report-file", help="location of HTML file to create")
 @click.argument("action", nargs=1, default="execute")
 def cli(action, **kwargs):
 
@@ -22,7 +23,7 @@ def cli(action, **kwargs):
 
     # Instantiate skillet and execute command
     sli = SkilletLineInterface(config_obj, action)
-    sli.run_command()
+    sli.execute()
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 import yaml
 import os
+from panforge import Report
 
 def print_table(objs, defs):
     """
@@ -50,3 +51,20 @@ def load_config_file(fileName):
         exit(1)
     with open(fileName, 'r') as f:
         return yaml.safe_load(f)
+
+def generate_report(out_file, data, report_dir, header=None):
+    """
+    Generate a panforge report at 'out_file' from source 'data' using 'report_dir'
+    as the root reporting directory for panforge
+    """
+    if not os.path.exists(report_dir):
+        print(f'Could not generate report, source directory {report_dir} not present')
+        return
+    report = Report(report_dir)
+    if header:
+        report.load_header(header)
+    report.load_data(data)
+    report_html = report.render_html()
+    with open(out_file, 'w') as f:
+        f.write(report.html)
+    print(f'Report written to {out_file}')

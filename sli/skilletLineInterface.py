@@ -12,7 +12,7 @@ class SkilletLineInterface():
     def __init__(self, options, action):
         self.action = action
         self.options = options
-        self.verbose = options.get('verbose', False)
+        self._unpack_options()
         self.command_map = {}
         self._load_commands()
         self._verify_command()
@@ -21,6 +21,16 @@ class SkilletLineInterface():
         self._verify_loaded_skillets()
         self.context = {}
         self.skillet = None # Active running skillet
+    
+    def _unpack_options(self):
+        """Unpack options onto self where required"""
+        self.verbose = self.options.get('verbose', False)
+        self.generate_report = self.options.get('report', False)
+        self.report_file = self.options.get('report_file', '')
+
+        # If a report file was specified, assume we want to create it
+        if self.report_file:
+            self.generate_report = True
     
     def _load_commands(self):
         """
@@ -66,25 +76,7 @@ class SkilletLineInterface():
             print("No skillets were loaded.")
             exit(1)
 
-    def _generate_panforge_report(self, exe):
-        """Generate a panforge formatted report if required"""
-        if not self.options.get('report'):
-            return
-        try:
-            report = Report(self.skillet.path + os.path.sep + 'report')
-        except FileNotFoundError:
-            print(f'Report flag specified and report.yml file not found for {self.skillet.name}')
-            return
-        report.load_header({
-            'Host': self.options['device']
-        })
-        report_context = exe['pan_validation']
-        report.load_data(report_context)
-        report_html = report.render_html()
-        with open('report.html', 'w') as f:
-            f.write(report.html)
-
-    def run_command(self):
+    def execute(self):
         """Run supplied SLI command"""
 
         action_obj = self.command_map[self.action](self)
