@@ -14,9 +14,7 @@ class ConfigureCommand(BaseCommand):
     @require_skillet_type('panos')
     @require_ngfw_connection_params
     def run(self):
-        context = {}
         for var in self.sli.skillet.variables:
-            context.update(get_variable_input(var))
-        from pprint import pprint
-        pprint(context)
+            self.sli.context.update(get_variable_input(var))
+        exe = self.sli.skillet.execute(self.sli.context) 
         print('Finished')
