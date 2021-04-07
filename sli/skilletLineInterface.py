@@ -25,6 +25,7 @@ class SkilletLineInterface():
     def _unpack_options(self):
         """Unpack options onto self where required"""
         self.verbose = self.options.get('verbose', False)
+        self.commit = self.options.get('commit', False)
         self.generate_report = self.options.get('report', False)
         self.report_file = self.options.get('report_file', '')
 

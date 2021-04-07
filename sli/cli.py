@@ -4,6 +4,7 @@ from sli.tools import load_config_file
 
 @click.command()
 @click.option("-c", "--config", help="Configuration file")
+@click.option("-cm", "--commit", is_flag=True, help="Commit configuration changes")
 @click.option("-v", "--verbose", is_flag=True, help="Verbose output")
 @click.option("-d", "--device", help="Device IP or hostname")
 @click.option("-sd", "--directory", help="Directory to load skillets from", default="./")

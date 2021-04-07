@@ -17,4 +17,9 @@ class ConfigureCommand(BaseCommand):
         for var in self.sli.skillet.variables:
             self.sli.context.update(get_variable_input(var))
         exe = self.sli.skillet.execute(self.sli.context) 
-        print('Finished')
+        if self.sli.commit:
+            print('Commiting configuration...')
+            self.sli.skillet.panoply.commit()
+            print('Finished')
+        else:
+            print('Configuration loaded into candidate config')
