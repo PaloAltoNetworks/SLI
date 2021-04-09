@@ -9,4 +9,4 @@ class BaseCommand():
 
     def run(self):
         """ Should be overridden by child classes"""
-        print('This module has not been implemented')
+        raise Exception(f"The SLI module {self.sli_command} has not properly overriden the run function")

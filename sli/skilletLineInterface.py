@@ -2,6 +2,7 @@ from skilletlib import SkilletLoader
 from sli.tools import print_table
 from getpass import getpass
 from panforge import Report
+from inspect import isclass
 import os
 
 from sli import commands
@@ -47,13 +48,11 @@ class SkilletLineInterface():
                 # Get only the attributes which are classes
                 for item_attr in dir(item_obj):
                     item_attr_obj = getattr(item_obj, item_attr)
-                    if isinstance(item_attr_obj, type):
+                    if isclass(item_attr_obj):
 
                         # Load only SLI command modules that are appropriately written
                         command_string = getattr(item_attr_obj, 'sli_command', '')
-                        if len(command_string) > 0:
-                            if issubclass(item_attr_obj, commands.BaseCommand) and item_attr_obj is not commands.BaseCommand:
-                                self.command_map[command_string] = item_attr_obj
+                        self.command_map[command_string] = item_attr_obj
     
     def _verify_command(self):
         """Called in __init__ to verify a submitted command is valid before running SkilletLoader"""
