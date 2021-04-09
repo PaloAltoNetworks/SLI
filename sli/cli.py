@@ -7,6 +7,7 @@ from sli.tools import load_config_file
 @click.option("-cm", "--commit", is_flag=True, help="Commit configuration changes")
 @click.option("-v", "--verbose", is_flag=True, help="Verbose output")
 @click.option("-d", "--device", help="Device IP or hostname")
+@click.option("-le", "--loader-error", is_flag=True, help="Fail on SkilletLoader errors")
 @click.option("-sd", "--directory", help="Directory to load skillets from", default="./")
 @click.option("-u", "--username", help="Device username")
 @click.option("-p", "--password", help="Device password")

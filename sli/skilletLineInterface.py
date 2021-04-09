@@ -25,9 +25,8 @@ class SkilletLineInterface():
     
     def _unpack_options(self):
         """Unpack options onto self where required"""
-        self.verbose = self.options.get('verbose', False)
-        self.commit = self.options.get('commit', False)
-        self.generate_report = self.options.get('report', False)
+        for opt in ('verbose', 'commit', 'report', 'loader_error'):
+            setattr(self, opt, self.options.get(opt, False))
         self.report_file = self.options.get('report_file', '')
 
         # If a report file was specified, assume we want to create it
@@ -68,6 +67,8 @@ class SkilletLineInterface():
             for err in self.sl.skillet_errors:
                 for key in err:
                     print(f"   {key} - {err[key]}")
+            if self.loader_error:
+                raise Exception('SkilletLoader encountered errors')
 
     def _verify_loaded_skillets(self):
         """Perform any pre-execution validations against loaded skillets"""
