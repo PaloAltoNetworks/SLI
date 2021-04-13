@@ -33,11 +33,14 @@ class SkilletLineInterface():
         if self.report_file:
             self.generate_report = True
     
-    def _load_commands(self):
+    def _load_commands(self, command_map=None):
         """
         Loads a list of commands from the sli.commands package. Does so by iterating over contents of the
         package and locating types of 'type' that have an sli_command specified.
         """
+
+        if command_map is None:
+            command_map = self.command_map
 
         # Go through each module in the commands package
         for item in dir(commands):
@@ -51,12 +54,13 @@ class SkilletLineInterface():
 
                         # Load only SLI command modules that are appropriately written
                         command_string = getattr(item_attr_obj, 'sli_command', '')
-                        self.command_map[command_string] = item_attr_obj
+                        if len(command_string) > 0:
+                            command_map[command_string] = item_attr_obj
     
     def _verify_command(self):
         """Called in __init__ to verify a submitted command is valid before running SkilletLoader"""
         if not self.action in self.command_map:
-            print('Invalid action')
+            print('Invalid action, run "sli --help" for list of available actions')
             exit(1)
 
     def _load_skillets(self):
@@ -76,6 +80,14 @@ class SkilletLineInterface():
         if len(self.skillets) < 1:
             print("No skillets were loaded.")
             exit(1)
+    
+    @classmethod
+    def get_commands(self):
+        """Load commands for purposes other than execution"""
+
+        command_map = {}
+        self._load_commands(self, command_map=command_map)
+        return command_map
 
     def execute(self):
         """Run supplied SLI command"""

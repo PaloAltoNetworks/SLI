@@ -9,6 +9,7 @@ from sli.decorators import (
 class ConfigureCommand(BaseCommand):
 
     sli_command = 'configure'
+    short_desc = 'Execute a configuration skillet of type panos'
 
     @require_single_skillet
     @require_skillet_type('panos')

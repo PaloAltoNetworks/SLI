@@ -2,7 +2,18 @@ import click
 from sli.skilletLineInterface import SkilletLineInterface
 from sli.tools import load_config_file
 
-@click.command()
+class FormatHelp(click.Command):
+    def format_help(self, ctx, formatter):
+        super().format_help(ctx, formatter)
+        commands = SkilletLineInterface.get_commands()
+        print('\nAvailable Commands:')
+        for command in commands:
+            c = commands[command]
+            short_desc = getattr(c, 'short_desc', None)
+            print(f'   {c.sli_command} {"- " + short_desc if short_desc else ""}')
+        print('')
+
+@click.command(cls=FormatHelp)
 @click.option("-c", "--config", help="Configuration file")
 @click.option("-cm", "--commit", is_flag=True, help="Commit configuration changes")
 @click.option("-v", "--verbose", is_flag=True, help="Verbose output")

@@ -14,6 +14,7 @@ Execute a validation skillet and generate results
 class ValidateCommand(BaseCommand):
 
     sli_command = 'validate'
+    short_desc = 'Execute a validation skillet of type pan_validation'
 
     @require_single_skillet
     @require_skillet_type('pan_validation')
@@ -30,7 +31,7 @@ class ValidateCommand(BaseCommand):
             self.print_verbose(exe)
         self.print_summary(exe)
 
-        if self.sli.generate_report:
+        if getattr(self.sli, 'generate_report', False):
             header = {'Host': self.sli.options['device']}
             out_file = getattr(self.sli, 'report_file', '')
             if len(out_file) < 1:

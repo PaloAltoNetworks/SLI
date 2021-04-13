@@ -9,6 +9,7 @@ Display any errors
 class LoadCommand(BaseCommand):
 
     sli_command = 'load'
+    short_desc = 'Load and display all skillets of any type'
 
     def run(self):
         """SLI action, test load all skillets in directory and print out loaded skillets"""
