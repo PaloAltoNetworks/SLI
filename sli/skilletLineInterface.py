@@ -18,8 +18,10 @@ class SkilletLineInterface():
         self._load_commands()
         self._verify_command()
         self.sl = SkilletLoader()
-        self._load_skillets()
-        self._verify_loaded_skillets()
+        if not getattr(self.command_map[self.action], 'no_skillet', False) == True:
+            # Load skillets only if the command requires them
+            self._load_skillets()
+            self._verify_loaded_skillets()
         self.context = {}
         self.skillet = None # Active running skillet
     

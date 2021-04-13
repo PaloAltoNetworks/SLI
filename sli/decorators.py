@@ -1,4 +1,6 @@
 from getpass import getpass
+from skilletlib.panoply import Panoply
+from skilletlib.exceptions import TargetConnectionException
 
 def require_ngfw_connection_params(func):
     """
@@ -27,6 +29,23 @@ def require_ngfw_connection_params(func):
             command.sli.context['TARGET_PASSWORD'] = getpass()
         return func(command)
     return wrap
+
+def require_panoply_connection(func):
+    """
+    Requires a connected panoply session to the target device, will pass in
+    the connected panoply instance as an argument
+    """
+    def wrap(command):
+        pan = Panoply(
+            command.sli.context['TARGET_IP'],
+            command.sli.context['TARGET_USERNAME'],
+            command.sli.context['TARGET_PASSWORD'],
+        )
+        if not pan.connected:
+            raise TargetConnectionException('Unable to connect to device')
+        return func(command, pan)
+    return wrap
+
 
 
 def require_single_skillet(func):
