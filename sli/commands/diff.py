@@ -12,11 +12,21 @@ class DiffCommand(BaseCommand):
     def run(self, pan):
         """Get a diff of running and candidate configs"""
 
-        running = pan.get_configuration(config_source='running')
-        candidate = pan.get_configuration(config_source='candidate')
-        output = pan.generate_set_cli_from_configs(running, candidate)
-        if len(output) < 1:
-            print('No differences found found')
-            return
-        for line in output:
-            print(line)
+        if self.sli.output_format == 'xml':
+            output = pan.generate_skillet(from_candidate=True)
+            if len(output) < 1:
+                print('No differences found found')
+            for d in output:
+                for k in d:
+                    print(f'{k}: {d[k]}')
+        
+        else:
+            # Default output format is set commands
+            running = pan.get_configuration(config_source='running')
+            candidate = pan.get_configuration(config_source='candidate')
+            output = pan.generate_set_cli_from_configs(running, candidate)
+            if len(output) < 1:
+                print('No differences found found')
+                return
+            for line in output:
+                print(line)

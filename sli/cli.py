@@ -24,7 +24,10 @@ class FormatHelp(click.Command):
 @click.option("-p", "--password", help="Device password")
 @click.option("-n", "--name", help="Name of skillet to execute")
 @click.option("-r", "--report", is_flag=True, help="Generate a panforge formatted report")
-@click.option("-rf", "--report-file", help="location of HTML file to create")
+@click.option("-rf", "--report-file", help="Location of HTML file to create")
+@click.option("-of", "--output-format", help="Output format, xml or set",
+    type=click.Choice(["xml", "set"]), default="xml"
+    )
 @click.argument("action", nargs=1, default="execute")
 def cli(action, **kwargs):
 
