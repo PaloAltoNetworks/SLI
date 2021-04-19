@@ -74,12 +74,13 @@ class ContextManager():
             while not decrypted:
                 try:
                     encryptor = Encryptor(password)
-                    dec = encryptor.decrypt_dict(content)
+                    decrypted_dict = encryptor.decrypt_dict(content)
                     decrypted = True
                 except json.decoder.JSONDecodeError:
-                    print('Invalid context decryption key')
+                    print('Invalid context decryption key\n')
                     self.context_password = ''
                     password = self._get_context_password()
+            return decrypted_dict
 
         # Assume unencrypted context content, return context
         return context_file_json.get('context', context)
@@ -107,12 +108,20 @@ class ContextManager():
                         print('Passwords did not match.\n')
                 self.context_password = new_password
 
-            # TODO: Left off on saving encrypted portion of context to disk
+            encryptor = Encryptor(self.context_password)
+            encrypted_context = encryptor.encrypt_dict(context)
+            with open(self.context_file, 'w') as f:
+                write_dict = {
+                    'encrypted': True,
+                    'encrypted_context': encrypted_context
+                }
+                f.write(json.dumps(write_dict, indent=4))
 
-        # Write unencrypted context
-        with open(self.context_file, 'w') as f:
-            write_dict = {
-                'encrypted': False,
-                'context': context
-            }
-            f.write(json.dumps(write_dict, indent=4))
+        else:
+            # Write unencrypted context
+            with open(self.context_file, 'w') as f:
+                write_dict = {
+                    'encrypted': False,
+                    'context': context
+                }
+                f.write(json.dumps(write_dict, indent=4))
