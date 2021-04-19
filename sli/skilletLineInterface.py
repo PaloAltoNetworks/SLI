@@ -8,6 +8,8 @@ import os
 from sli import commands
 from types import ModuleType
 
+from sli.contextManager import ContextManager
+
 class SkilletLineInterface():
 
     def __init__(self, options, action):
@@ -18,11 +20,15 @@ class SkilletLineInterface():
         self._load_commands()
         self._verify_command()
         self.sl = SkilletLoader()
+
+
+        # Load skillets only if the command requires them
         if not getattr(self.command_map[self.action], 'no_skillet', False) == True:
-            # Load skillets only if the command requires them
             self._load_skillets()
             self._verify_loaded_skillets()
-        self.context = {}
+
+        self.cm = ContextManager(self.options)
+        self.context = self.cm.loadContext()
         self.skillet = None # Active running skillet
     
     def _unpack_options(self):
@@ -96,6 +102,7 @@ class SkilletLineInterface():
 
         action_obj = self.command_map[self.action](self)
         action_obj.execute()
+        self.cm.saveContext(self.context)
 
         # Clean run, normal exit
         exit(0)

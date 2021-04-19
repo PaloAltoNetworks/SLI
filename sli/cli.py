@@ -25,6 +25,10 @@ class FormatHelp(click.Command):
 @click.option("-n", "--name", help="Name of skillet to execute")
 @click.option("-r", "--report", is_flag=True, help="Generate a panforge formatted report")
 @click.option("-rf", "--report-file", help="Location of HTML file to create")
+@click.option("-uc", "--use-context", is_flag=True, help="Use a context manager, (global by default)")
+@click.option("-cn", "--context-name", help="Use a contexet manager other than global")
+@click.option("-ec", "--encrypt-context", is_flag=True, help="Encrypt the context object")
+@click.option("-cp", "--context-password", help="Password for encrypted context")
 @click.option("-of", "--output-format", help="Output format, xml or set",
     type=click.Choice(["xml", "set"]), default="xml"
     )

@@ -1,5 +1,6 @@
 import yaml
 import os
+from os.path import expanduser
 from panforge import Report
 
 def print_table(objs, defs):
@@ -124,3 +125,7 @@ def get_variable_input(var):
         return ret_dict
 
     raise ValueError(f'Unsupported input variable type of {type_hint} in var {name}')
+
+def expandedHomePath(directory):
+    """Returns a local OS formatted directory string"""
+    return expanduser("~") + os.path.sep + os.path.sep.join(directory.strip().split('/'))
