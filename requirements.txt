@@ -2,3 +2,4 @@ skilletlib
 click
 panforge
 jmespath
+pycryptodome

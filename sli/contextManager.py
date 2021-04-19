@@ -1,6 +1,8 @@
 from sli.tools import expandedHomePath
 import os
 import json
+import getpass
+from sli.encrypt import Encryptor
 
 """
 SLI's context manager, load, manipulate, and store context objects
@@ -12,8 +14,10 @@ class ContextManager():
         self._setup_directory()
         self.options = options
         self.use_context = self.options.get('use_context')
+        self.encrypt_context = self.options.get('use_context')
         self.context_dir = expandedHomePath('.sli/context')
         self.context_file = '' # Populated when loading context
+        self.context_password = options.get('context_password', '')
     
     @staticmethod
     def _setup_directory():
@@ -22,18 +26,29 @@ class ContextManager():
         for directory in directories:
             if not os.path.exists(directory):
                 os.mkdir(directory)
+    
+    def _get_context_password(self):
+        """Returns user supplied password for context"""
+        if len(self.context_password) > 0:
+            return self.context_password
+        self.context_password = getpass.getpass('Context encryption password: ')
+        return self.context_password
+
 
     def loadContext(self):
         """Load a context from disk"""
         context = {}
 
-        # If not loading a context, return the blank context
-        if not self.use_context:
-            return context
-        
         # Unless a context name is specified, assume default context
         context_name = self.options.get('context_name', 'default')
         self.context_file = expandedHomePath(f'.sli/context/{context_name}.json')
+
+        if not context_name == 'default':
+            self.use_context = True
+
+        # If not loading a context, return the blank context
+        if not self.use_context:
+            return context
 
         # If specified context file not found, return blank context
         if not os.path.exists(self.context_file):
@@ -48,7 +63,23 @@ class ContextManager():
 
         # Check for encryption and decrypt stored value if found
         if context_file_json.get('encrypted'):
-            pass
+            self.encrypt_context = True # Make sure we encrypt the written file at the end
+            content = context_file_json.get('encrypted_context')
+            if not content:
+                raise ValueError(
+                    'Context has encryption specified, but encrypted_context not found'
+                    )
+            password = self._get_context_password()
+            decrypted = False
+            while not decrypted:
+                try:
+                    encryptor = Encryptor(password)
+                    dec = encryptor.decrypt_dict(content)
+                    decrypted = True
+                except json.decoder.JSONDecodeError:
+                    print('Invalid context decryption key')
+                    self.context_password = ''
+                    password = self._get_context_password()
 
         # Assume unencrypted context content, return context
         return context_file_json.get('context', context)
@@ -60,6 +91,23 @@ class ContextManager():
         # If not configured to use a context do nothing
         if not self.use_context:
             return
+        
+        # If required write encrypted context file
+        if self.encrypt_context:
+
+            if len(self.context_password) < 1:
+                # We don't currently have a context password set, lets create one
+                matches = False
+                new_password = ''
+                while not matches:
+                    new_password = getpass.getpass('New context encryption password: ')
+                    confirm_password = getpass.getpass('Confirm password: ')
+                    matches = new_password == confirm_password and len(new_password) > 0
+                    if not matches:
+                        print('Passwords did not match.\n')
+                self.context_password = new_password
+
+            # TODO: Left off on saving encrypted portion of context to disk
 
         # Write unencrypted context
         with open(self.context_file, 'w') as f:
