@@ -18,6 +18,8 @@ class ContextManager():
         self.context_dir = expandedHomePath('.sli/context')
         self.context_file = '' # Populated when loading context
         self.context_password = options.get('context_password', '')
+        if len(self.context_password) > 0:
+            self.encrypt_context = True
     
     @staticmethod
     def _setup_directory():
@@ -76,7 +78,7 @@ class ContextManager():
                     encryptor = Encryptor(password)
                     decrypted_dict = encryptor.decrypt_dict(content)
                     decrypted = True
-                except json.decoder.JSONDecodeError:
+                except (json.decoder.JSONDecodeError, UnicodeDecodeError):
                     print('Invalid context decryption key\n')
                     self.context_password = ''
                     password = self._get_context_password()
