@@ -2,6 +2,7 @@ class BaseCommand():
 
     def __init__(self, sli):
         self.sli = sli
+        self.args = self.sli.args
 
     def execute(self):
         """SLI starts here to call the run function"""

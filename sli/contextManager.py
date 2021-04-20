@@ -28,6 +28,15 @@ class ContextManager():
         for directory in directories:
             if not os.path.exists(directory):
                 os.mkdir(directory)
+    @staticmethod
+    def remove_context(context_name):
+        """Remove a specified context file"""
+        context_file = expandedHomePath(f'.sli/context/{context_name}.json')
+        if not os.path.exists(context_file):
+            print(f'Specified context {context_name} does not exist')
+            return False
+        os.remove(context_file)
+        return True
     
     def _get_context_password(self):
         """Returns user supplied password for context"""
@@ -37,7 +46,7 @@ class ContextManager():
         return self.context_password
 
 
-    def loadContext(self):
+    def load_context(self):
         """Load a context from disk"""
         context = {}
 

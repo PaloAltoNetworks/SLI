@@ -12,23 +12,27 @@ from sli.contextManager import ContextManager
 
 class SkilletLineInterface():
 
-    def __init__(self, options, action):
+    def __init__(self, options, action, args):
         self.action = action
         self.options = options
+        self.args = args
         self._unpack_options()
         self.command_map = {}
         self._load_commands()
         self._verify_command()
         self.sl = SkilletLoader()
+        self.no_skillet = getattr(self.command_map[self.action], 'no_skillet', False) == True
+        self.no_context = getattr(self.command_map[self.action], 'no_context', False) == True
 
 
         # Load skillets only if the command requires them
-        if not getattr(self.command_map[self.action], 'no_skillet', False) == True:
+        if not self.no_skillet:
             self._load_skillets()
             self._verify_loaded_skillets()
 
         self.cm = ContextManager(self.options)
-        self.context = self.cm.loadContext()
+        if not self.no_context:
+            self.context = self.cm.load_context()
         self.skillet = None # Active running skillet
     
     def _unpack_options(self):
@@ -104,12 +108,13 @@ class SkilletLineInterface():
         action_obj.execute()
 
         #Update context with new keys from skillet run
-        skillet_context = getattr(self.skillet, 'context', None)
-        if skillet_context:
-            for key in skillet_context.keys():
-                if key not in ['loop', 'loop_index']:
-                    self.context[key] = skillet_context[key]
-        self.cm.saveContext(self.context)
+        if not self.no_context:
+            skillet_context = getattr(self.skillet, 'context', None)
+            if skillet_context:
+                for key in skillet_context.keys():
+                    if key not in ['loop', 'loop_index']:
+                        self.context[key] = skillet_context[key]
+            self.cm.saveContext(self.context)
 
         # Clean run, normal exit
         exit(0)

@@ -13,7 +13,10 @@ class FormatHelp(click.Command):
             print(f'   {c.sli_command} {"- " + short_desc if short_desc else ""}')
         print('')
 
-@click.command(cls=FormatHelp)
+@click.command(cls=FormatHelp,
+    context_settings={
+        'allow_extra_args':True
+    })
 @click.option("-c", "--config", help="Configuration file")
 @click.option("-cm", "--commit", is_flag=True, help="Commit configuration changes")
 @click.option("-v", "--verbose", is_flag=True, help="Verbose output")
@@ -33,7 +36,8 @@ class FormatHelp(click.Command):
     type=click.Choice(["xml", "set"]), default="xml"
     )
 @click.argument("action", nargs=1, default="execute")
-def cli(action, **kwargs):
+@click.pass_context
+def cli(ctx, action, **kwargs):
 
     # Load configuration options from file, override with click parameters
     config_obj = load_config_file(kwargs.get('config'))
@@ -42,7 +46,7 @@ def cli(action, **kwargs):
             config_obj[key] = kwargs[key]
 
     # Instantiate skillet and execute command
-    sli = SkilletLineInterface(config_obj, action)
+    sli = SkilletLineInterface(config_obj, action, ctx.args)
     sli.execute()
 
 
