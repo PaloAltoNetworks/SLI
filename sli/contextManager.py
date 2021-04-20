@@ -58,19 +58,23 @@ class ContextManager():
         return self.context_password
 
 
-    def load_context(self):
+    def load_context(self, from_file=''):
         """Load a context from disk"""
         context = {}
 
-        # Unless a context name is specified, assume default context
-        context_name = self.options.get('context_name', 'default')
+        if len(from_file):
+            # If called with from_file, use that
+            context_name = from_file
+        else:
+            # Unless a context name is specified, assume default context
+            context_name = self.options.get('context_name', 'default')
         self.context_file = expandedHomePath(f'.sli/context/{context_name}.json')
 
-        if not context_name == 'default':
+        if not context_name == 'default' and not len(from_file):
             self.use_context = True
 
         # If not loading a context, return the blank context
-        if not self.use_context:
+        if not self.use_context and not len(from_file):
             return context
 
         # If specified context file not found, return blank context
