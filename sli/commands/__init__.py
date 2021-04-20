@@ -18,8 +18,8 @@ for (_, module_name, _) in iter_modules([package_dir]):
         if attr is BaseCommand:
             continue
         if isclass(attr):  
+            if not len(getattr(attr, 'sli_command', '')) > 0:
+                continue
             if not issubclass(attr, BaseCommand):
                 raise ImportError(f'Command module {attr} must subclass BaseCommand')
-            if not len(getattr(attr, 'sli_command', '')) > 0:
-                raise ImportError(f'Command module {attr} must have an sli_command attribute')
             globals()[attr_name] = attr
