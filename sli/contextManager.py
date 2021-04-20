@@ -37,6 +37,18 @@ class ContextManager():
             return False
         os.remove(context_file)
         return True
+
+    @staticmethod
+    def get_contexts():
+        contexts = []
+        context_path = expandedHomePath('.sli/context/')
+        context_files = [x for x in os.listdir(context_path) if x.endswith('.json')]
+        for cf in context_files:
+            cf_path = expandedHomePath(f'.sli/context/{cf}')
+            with open(cf_path, 'r') as f:
+                contents = json.loads(f.read())
+            contexts.append({'name': cf.replace('.json', ''), 'encrypted': contents.get('encrypted')})
+        return contexts
     
     def _get_context_password(self):
         """Returns user supplied password for context"""
