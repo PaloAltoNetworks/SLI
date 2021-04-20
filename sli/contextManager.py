@@ -14,7 +14,7 @@ class ContextManager():
         self._setup_directory()
         self.options = options
         self.use_context = self.options.get('use_context')
-        self.encrypt_context = self.options.get('use_context')
+        self.encrypt_context = self.options.get('encrypt_context')
         self.context_dir = expandedHomePath('.sli/context')
         self.context_file = '' # Populated when loading context
         self.context_password = options.get('context_password', '')

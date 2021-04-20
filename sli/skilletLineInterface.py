@@ -102,6 +102,13 @@ class SkilletLineInterface():
 
         action_obj = self.command_map[self.action](self)
         action_obj.execute()
+
+        #Update context with new keys from skillet run
+        skillet_context = getattr(self.skillet, 'context', None)
+        if skillet_context:
+            for key in skillet_context.keys():
+                if key not in ['loop', 'loop_index']:
+                    self.context[key] = skillet_context[key]
         self.cm.saveContext(self.context)
 
         # Clean run, normal exit
