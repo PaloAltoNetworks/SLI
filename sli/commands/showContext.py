@@ -18,4 +18,8 @@ class ShowContext(BaseCommand):
             return
         if self.sli.no_config:
             context.pop('config')
+        hidden_fields = ['TARGET_PASSWORD']
+        for hf in hidden_fields:
+            if hf in context:
+                context[hf] = '*****'
         print(json.dumps(context, indent=4))

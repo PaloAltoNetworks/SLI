@@ -15,7 +15,7 @@ class DiffCommand(BaseCommand):
         if self.sli.output_format == 'xml':
             output = pan.generate_skillet(from_candidate=True)
             if len(output) < 1:
-                print('No differences found found')
+                print('No differences found')
             for d in output:
                 for k in d:
                     print(f'{k}: {d[k]}')
