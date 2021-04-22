@@ -1,4 +1,3 @@
-
 # SLI
 
   
@@ -22,9 +21,7 @@ It is recommended to install SLI in a venv to avoid conflicts with other python 
 The latest release of SLI is availble on pip, install with
 
 ```
-
 pip install sli
-
 ```
 
   
@@ -32,9 +29,7 @@ pip install sli
 Upgrade with
 
 ```
-
 pip install sli --upgrade
-
 ```
 
   
@@ -42,17 +37,13 @@ pip install sli --upgrade
 To get the latest development version SLI, install by cloning this repository and running these commands with an active venv
 
 ```
-
-# Change into the cloned directory
+ # Change into the cloned directory
 
 cd into directory
 
-  
-
-# The "." at the end allows you to edit the code and use the sli command
+ # The "." at the end allows you to edit the code and use the sli command
 
 pip install -e .
-
 ```
 Installing the development version for mac users and linux that requires the "python3" command to use python version 3, run these commands
 ```
@@ -69,10 +60,10 @@ pip install -e .
 
 When SLI is run, if your command requires skillets, they are all loaded from your working directory by default, unless you specify otherwise. Test loading skillets with the following command. This command changes nothing in your sli environment, the -sd parameter is supported by all commands that require skillets.
 ```
-# Load and view skillets from current working directory
+ # Load and view skillets from current working directory
 sli load
 
-# Load and view skillets from a specified command
+ # Load and view skillets from a specified command
 sli load -sd C:\code\skillets\iron-skillet\
 ```
 
@@ -80,8 +71,8 @@ sli load -sd C:\code\skillets\iron-skillet\
 
 The primary purpose of SLI is to execute skillets, here is configuration skillet example:
 ```
-# The configure command requires a single skillet to be selected
-# This can be done with the --name parameter
+ # The configure command requires a single skillet to be selected
+ # This can be done with the --name parameter
 sli configure -sd C:\skillets --name skillet_name
 ```
 Validation example
@@ -109,8 +100,8 @@ As device credentials are stored in the context, you only need to specify them d
 
 You can store data in multiple named contexts other than the default to be able to test multiple configurations at once using the -cn parameter
 ```
-# When specifying -cn, you do not need -uc
-# This will store all context data in a context named my_context
+ # When specifying -cn, you do not need -uc
+ # This will store all context data in a context named my_context
 sli validate -sd C:\skillets --name skillet_name -cn my_context
 ```
 Subsequent commands using the same -cn parameter will load context from the specified context name.
@@ -124,7 +115,7 @@ sli list_context
 If you want to view the contents of a context run
 ```
 sli show_context my_context
-# Leaving out my_context will print the default context
+ # Leaving out my_context will print the default context
 ```
 You can also clear an existing context with
 ```
@@ -139,10 +130,10 @@ sli show_context -nc
 
 Context data is not encrypted on disk by default. You can however encrypt your context by adding an encryption password with the -ec (encrypt-context) flag or -cp (context-password) parameter
 ```
-# This will prompt you for an encryption password
+ # This will prompt you for an encryption password
 sli validate -sd C:\skillets --name skillet_name -ec
 
-# This sets the context password to context_password
+ # This sets the context password to context_password
 sli validate -sd C:\skillets --name skillet_name -cp context_password
 ```
 When accessed after creation, an encrypted context will prompt the user for the password unless specified with the -cp parameter.
@@ -172,6 +163,6 @@ sli capture -uc expression "decryption_rules | json_query('[].entry[].category.m
   ```
 SLI can also provide a diff of the candidate and running config to provide an xpath / XML combo.
 ```
-# This command gets the device credentials from the default context and runs a diff
+ # This command gets the device credentials from the default context and runs a diff
 sli diff -uc
 ```
