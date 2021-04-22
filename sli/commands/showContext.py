@@ -9,7 +9,9 @@ class ShowContext(BaseCommand):
     no_context = True
 
     def run(self):
-        context_name = self.args[0] if len(self.args) > 0 else 'default'
+        context_name = self.sli.options.get('context_name', '')
+        if len(context_name) < 1:
+            context_name = self.args[0] if len(self.args) > 0 else 'default'
         context = self.sli.cm.load_context(from_file=context_name)
         if not len(context.keys()):
             print(f'Unable to load context {context_name}')
