@@ -23,6 +23,7 @@ setuptools.setup(
         'skilletlib',
         'panforge',
         'click',
+        'pycryptodome',
     ],
     entry_points={
         'console_scripts': [
