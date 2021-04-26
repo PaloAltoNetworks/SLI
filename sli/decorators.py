@@ -56,7 +56,7 @@ def require_single_skillet(func):
             print(f'Specify a skillet to run with --name when more than 1 is present for command{command.sli_command}')
             exit(1)
 
-        target_name = command.sli.options['name'] if command.sli.options['name'] else command.sli.skillets[0].name
+        target_name = command.sli.options.get('name') if command.sli.options.get('name') else command.sli.skillets[0].name
         command.sli.skillet = command.sli.sl.get_skillet_with_name(target_name)
         if command.sli.skillet is None:
             print(f'Unable to load skillet {target_name} by name')
