@@ -4,7 +4,8 @@ from sli.tools import print_table, generate_report
 from sli.decorators import (
     require_ngfw_connection_params,
     require_single_skillet,
-    require_skillet_type
+    require_skillet_type,
+    load_variables
 )
 
 """
@@ -19,6 +20,7 @@ class ValidateCommand(BaseCommand):
     @require_single_skillet
     @require_skillet_type('pan_validation')
     @require_ngfw_connection_params
+    @load_variables
     def run(self):
         """
         SLI action, test load all skillets in directory and print out loaded skillets

@@ -1,9 +1,9 @@
 from .base import BaseCommand
-from sli.tools import get_variable_input
 from sli.decorators import (
     require_ngfw_connection_params,
     require_single_skillet,
-    require_skillet_type
+    require_skillet_type,
+    load_variables
 )
 
 class ConfigureCommand(BaseCommand):
@@ -14,9 +14,8 @@ class ConfigureCommand(BaseCommand):
     @require_single_skillet
     @require_skillet_type('panos')
     @require_ngfw_connection_params
+    @load_variables
     def run(self):
-        for var in self.sli.skillet.variables:
-            self.sli.context.update(get_variable_input(var))
         exe = self.sli.skillet.execute(self.sli.context) 
         if self.sli.commit:
             print('Commiting configuration...')

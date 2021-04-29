@@ -1,6 +1,7 @@
 from getpass import getpass
 from skilletlib.panoply import Panoply
 from skilletlib.exceptions import TargetConnectionException
+from sli.tools import get_variable_input
 
 def require_ngfw_connection_params(func):
     """
@@ -46,7 +47,22 @@ def require_panoply_connection(func):
         return func(command, pan)
     return wrap
 
+def load_variables(func):
+    """Load variables from skillet and get user input if not supplied"""
 
+    def wrap(command):
+        for var in command.sli.skillet.variables:
+            args = {x.split('=')[0]: x.split('=')[1] for x in command.args if '=' in x}
+            if var['name'] in args:
+                # First order of preference is to use a CLI provided parameter
+                command.sli.context[var['name']] = args[var['name']]
+            elif var['name'] in command.sli.context:
+                pass # Use what's already in the context if no input specified
+            else:
+                # If input has not yet been supplied, get it from the user
+                command.sli.context.update(get_variable_input(var))
+        return func(command)
+    return wrap
 
 def require_single_skillet(func):
     """Commands decorated with this require one skillet to be uniquely specified"""
@@ -63,7 +79,6 @@ def require_single_skillet(func):
             exit(1)
         return func(command)
     return wrap
-
 
 def require_skillet_type(*args):
     """

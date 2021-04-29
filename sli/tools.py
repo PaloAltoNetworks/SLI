@@ -89,14 +89,13 @@ def get_variable_input(var):
     """
     type_hint = var.get('type_hint')
     name = var.get('name')
-    description = var.get('description')
+    desc = var.get('description', name)
     if not name:
         raise ValueError(f'Input variable missing name')
     ret_dict = {}
 
     if type_hint == 'checkbox':
         cbx_list = var.get('cbx_list', [])
-        desc = description if description else name
         print(f"\n{desc}\n{'-'*len(desc)}\n")
 
         # Get inputs from user until user confirms they are ok
@@ -119,12 +118,53 @@ def get_variable_input(var):
             if input_yes_no('Are These answers ok?', True):
                 confirmed = True
 
-        # Put inputs inside ret_dict and return
+        # Add input to ret_dict
         ret_dict[name] = input_list
 
-        return ret_dict
+    elif type_hint=='dropdown':
+        print(f"\n{desc}")
+        i = 1
+        for val in var['dd_list']:
+            print(f"   {i}. {var['dd_list'][i-1]['key']}")
+            i += 1
+        valid_response = False
+        while not valid_response:
+            response = input("Please enter line number of selection: ")
+            if response.isdigit() and not '.' in response:
+                response_index =  int(response) - 1
+                if response_index < 0 or response_index > len(var['dd_list']):
+                    print(f"Please input a number between 1 and {len(var['dd_list'])}")
+                else:
+                    value = var['dd_list'][response_index]['value']
+                    ret_dict[name] = value
+                    valid_response = True
+            else:
+                print("Please input a number")
 
-    raise ValueError(f'Unsupported input variable type of {type_hint} in var {name}')
+    elif type_hint=='list':
+        valid_response = False
+        while not valid_response:
+            response = input(f"{desc} (comma seperated list): ")
+            rl = [x.strip() for x in response.split(',') if len(x)]
+            print("You entered:")
+            if len(rl):
+                for item in rl:
+                    print(f"  - {item}")
+            else:
+                print("[]")
+
+            #if input_yes_no("Are these values correct?", True):
+            ret_dict[name] = rl
+            valid_response = True
+
+
+    elif type_hint=='hidden':
+        ret_dict[name] = var.get('default')
+
+    else:
+        raise ValueError(f'Unsupported input variable type of {type_hint} in var {name}')
+
+    return ret_dict
 
 def expandedHomePath(directory):
     """Returns a local OS formatted directory string"""
