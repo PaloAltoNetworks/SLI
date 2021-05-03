@@ -3,6 +3,21 @@ import os
 from os.path import expanduser
 from panforge import Report
 from getpass import getpass
+import socket
+
+def is_ip(ip):
+    """
+    Return True if either an IPv4 or IPV6 address
+    """
+    for family in socket.AF_INET, socket.AF_INET6:
+        try:
+            socket.inet_pton(family, ip)
+            return True
+        except:
+            pass
+    return False
+
+
 
 def print_table(objs, defs):
     """
@@ -162,6 +177,16 @@ def get_variable_input(var, context):
             if input_yes_no("Are these values correct?", True):
                 ret_dict[name] = rl
                 valid_response = True
+
+    elif type_hint=='ip_address':
+        valid_response = False
+        while not valid_response:
+            response = input(f"{var.get('description', name)} (ipv4): ")
+            if is_ip(response):
+                valid_response = True
+            else:
+                print("Invalid IPv4 address.")
+        ret_dict[name] = response
 
     elif type_hint=='password':
         ret_dict[name] = getpass(f"{var.get('description', name)}: ")
