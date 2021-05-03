@@ -114,7 +114,7 @@ class SkilletLineInterface():
                 for key in skillet_context.keys():
                     if key not in ['loop', 'loop_index']:
                         self.context[key] = skillet_context[key]
-            self.cm.saveContext(self.context)
+            self.cm.save_context(self.context)
 
         # Clean run, normal exit
         exit(0)

@@ -37,6 +37,17 @@ class ContextManager():
             return False
         os.remove(context_file)
         return True
+    
+    def clean_context(self, context_name):
+        """Remove all keys from a contexts except NGFW credentials"""
+        context = self.load_context(from_file=context_name)
+        creds_strings = "TARGET_IP", "TARGET_USERNAME", "TARGET_PASSWORD"
+        keys = [x for x in context.keys() if not x in creds_strings]
+        for key in keys:
+            context.pop(key)
+        print(context)
+        self.use_context = True
+        self.save_context(context)
 
     @staticmethod
     def get_contexts():
@@ -113,7 +124,7 @@ class ContextManager():
         return context_file_json.get('context', context)
 
     
-    def saveContext(self, context):
+    def save_context(self, context):
         """Save a context to disk"""
 
         # If not configured to use a context do nothing

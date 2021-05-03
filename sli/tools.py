@@ -18,7 +18,6 @@ def is_ip(ip):
     return False
 
 
-
 def print_table(objs, defs):
     """
     Print a formatted table with left justified columns
