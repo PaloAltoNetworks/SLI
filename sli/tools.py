@@ -83,7 +83,7 @@ def input_yes_no(prompt, ret_value, ret_false=None):
             return ret_false
         print('Please input either y or n')
 
-def get_variable_input(var):
+def get_variable_input(var, context):
     """
     Get input from user in reference to var, being a skillet variable object
     """
@@ -93,6 +93,11 @@ def get_variable_input(var):
     if not name:
         raise ValueError(f'Input variable missing name')
     ret_dict = {}
+
+    # Check for a toggle hint and return if not applicable
+    if 'toggle_hint' in var:
+        if not var['toggle_hint']['value'] == context.get(var['toggle_hint'].get('source')):
+            return ret_dict
 
     if type_hint == 'checkbox':
         cbx_list = var.get('cbx_list', [])
@@ -153,9 +158,9 @@ def get_variable_input(var):
             else:
                 print("[]")
 
-            #if input_yes_no("Are these values correct?", True):
-            ret_dict[name] = rl
-            valid_response = True
+            if input_yes_no("Are these values correct?", True):
+                ret_dict[name] = rl
+                valid_response = True
 
 
     elif type_hint=='text':

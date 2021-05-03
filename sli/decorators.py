@@ -60,7 +60,7 @@ def load_variables(func):
                 pass # Use what's already in the context if no input specified
             else:
                 # If input has not yet been supplied, get it from the user
-                command.sli.context.update(get_variable_input(var))
+                command.sli.context.update(get_variable_input(var, command.sli.context))
         return func(command)
     return wrap
 
