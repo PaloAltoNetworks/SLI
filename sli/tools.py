@@ -158,6 +158,9 @@ def get_variable_input(var):
             valid_response = True
 
 
+    elif type_hint=='text':
+        ret_dict[name] = input(f"{var.get('description', name)}: ")
+
     elif type_hint=='hidden':
         ret_dict[name] = var.get('default')
 
