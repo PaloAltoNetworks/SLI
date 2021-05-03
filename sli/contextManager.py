@@ -45,7 +45,6 @@ class ContextManager():
         keys = [x for x in context.keys() if not x in creds_strings]
         for key in keys:
             context.pop(key)
-        print(context)
         self.use_context = True
         self.save_context(context)
 
