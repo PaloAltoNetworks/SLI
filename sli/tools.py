@@ -181,15 +181,23 @@ def get_variable_input(var, context):
     elif type_hint=='ip_address':
         valid_response = False
         while not valid_response:
-            response = input(f"{var.get('description', name)} (ipv4): ")
+            response = input(f"{var.get('description', name)} (ip): ")
             if is_ip(response):
                 valid_response = True
             else:
-                print("Invalid IPv4 address.")
+                print("Invalid IP address.")
         ret_dict[name] = response
 
     elif type_hint=='password':
-        ret_dict[name] = getpass(f"{var.get('description', name)}: ")
+        valid_response = False
+        while not valid_response:
+            password = getpass(f"{var.get('description', name)}: ")
+            confirm = getpass(f"Confirm - {var.get('description', name)}: ")
+            if password == confirm:
+                valid_response = True
+            else:
+                print("Password and confirm do not match!")
+        ret_dict[name] = password
 
     elif type_hint=='text':
         ret_dict[name] = input(f"{var.get('description', name)}: ")
