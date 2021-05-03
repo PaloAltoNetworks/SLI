@@ -2,6 +2,7 @@ import yaml
 import os
 from os.path import expanduser
 from panforge import Report
+from getpass import getpass
 
 def print_table(objs, defs):
     """
@@ -162,6 +163,8 @@ def get_variable_input(var, context):
                 ret_dict[name] = rl
                 valid_response = True
 
+    elif type_hint=='password':
+        ret_dict[name] = getpass(f"{var.get('description', name)}: ")
 
     elif type_hint=='text':
         ret_dict[name] = input(f"{var.get('description', name)}: ")
