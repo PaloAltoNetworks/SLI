@@ -1,18 +1,18 @@
-from .base import BaseCommand
-from sli.decorators import (
-    require_ngfw_connection_params,
-    require_single_skillet,
-    require_skillet_type,
-    load_variables
-)
-
 from jinja2 import Template
+
+from sli.decorators import load_variables
+from sli.decorators import require_ngfw_connection_params
+from sli.decorators import require_single_skillet
+from sli.decorators import require_skillet_type
+from .base import BaseCommand
+
 
 def should_execute(snippet, context):
     """Determine if a workflow snippet should be exectued"""
     if not 'when' in snippet:
         return True
     return Template("{{" + snippet['when'] + "}}").render(context) == "True"
+
 
 def print_validation_output(exe):
     """Print output for validation skillets after run"""
@@ -24,8 +24,8 @@ def print_validation_output(exe):
             print(f"   Validation: {output_name}")
             print(f"      Output: {output['output_message']}")
 
-class WorkflowCommand(BaseCommand):
 
+class WorkflowCommand(BaseCommand):
     sli_command = 'workflow'
     short_desc = 'Execute a workflow skillet'
 
@@ -60,4 +60,3 @@ class WorkflowCommand(BaseCommand):
                 print_validation_output(exe)
             elif snippet_skillet.type == 'template':
                 print(snippet_skillet.get_results()['template'])
-            

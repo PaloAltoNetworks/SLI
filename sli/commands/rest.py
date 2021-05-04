@@ -1,16 +1,14 @@
+from sli.decorators import load_variables
+from sli.decorators import require_single_skillet
+from sli.decorators import require_skillet_type
 from .base import BaseCommand
-from sli.decorators import (
-    require_single_skillet,
-    require_skillet_type,
-    load_variables
-)
 
 """
 Execute a REST skillet and generate results
 """
 
-class ValidateCommand(BaseCommand):
 
+class ValidateCommand(BaseCommand):
     sli_command = 'rest'
     short_desc = 'Execute a validation skillet of type REST'
 
@@ -22,6 +20,6 @@ class ValidateCommand(BaseCommand):
         Execute a REST skillet
         """
 
-        exe = self.sli.skillet.execute(self.sli.context) 
+        exe = self.sli.skillet.execute(self.sli.context)
         from pprint import pprint as pp
         pp(exe)

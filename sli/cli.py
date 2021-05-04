@@ -1,6 +1,12 @@
 import click
+
 from sli.skilletLineInterface import SkilletLineInterface
 from sli.tools import load_config_file
+
+import pydevd_pycharm
+
+pydevd_pycharm.settrace('localhost', port=45443, stdoutToServer=True, stderrToServer=True, suspend=False)
+
 
 class FormatHelp(click.Command):
     def format_help(self, ctx, formatter):
@@ -13,10 +19,31 @@ class FormatHelp(click.Command):
             print(f'   {c.sli_command} {"- " + short_desc if short_desc else ""}')
         print('')
 
+    def parse_args(self, ctx, args):
+        """
+        Check args for available commands, and print help_text if found. Otherwise,
+        default to normal help text via 'format_help'
+        """
+
+        if '--help' in args and len(args) > 1:
+            commands = SkilletLineInterface.get_commands()
+            for command in args:
+                if command in commands:
+                    c = commands[command]
+                    if hasattr(c, 'help_text'):
+                        print(c.help_text)
+                        ctx.exit()
+                    elif hasattr(c, 'short_desc'):
+                        print(c.short_desc)
+                        ctx.exit()
+
+        super().parse_args(ctx, args)
+
+
 @click.command(cls=FormatHelp,
-    context_settings={
-        'allow_extra_args':True
-    })
+               context_settings={
+                   'allow_extra_args': True
+               })
 @click.option("-c", "--config", help="Configuration file")
 @click.option("-cm", "--commit", is_flag=True, help="Commit configuration changes")
 @click.option("-v", "--verbose", is_flag=True, help="Verbose output")
@@ -32,10 +59,10 @@ class FormatHelp(click.Command):
 @click.option("-cn", "--context-name", help="Use a contexet manager other than global")
 @click.option("-ec", "--encrypt-context", is_flag=True, help="Encrypt the context object")
 @click.option("-cp", "--context-password", help="Password for encrypted context")
-@click.option("-nc", "--no-config", is_flag=True, help="Hide full device configuration from output",)
+@click.option("-nc", "--no-config", is_flag=True, help="Hide full device configuration from output", )
 @click.option("-of", "--output-format", help="Output format, xml or set",
-    type=click.Choice(["xml", "set"]), default="xml"
-    )
+              type=click.Choice(["xml", "set"]), default="xml"
+              )
 @click.argument("action", nargs=1, default="execute")
 @click.pass_context
 def cli(ctx, action, **kwargs):

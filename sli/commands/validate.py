@@ -1,19 +1,19 @@
 import os
+
+from sli.decorators import load_variables
+from sli.decorators import require_ngfw_connection_params
+from sli.decorators import require_single_skillet
+from sli.decorators import require_skillet_type
+from sli.tools import generate_report
+from sli.tools import print_table
 from .base import BaseCommand
-from sli.tools import print_table, generate_report
-from sli.decorators import (
-    require_ngfw_connection_params,
-    require_single_skillet,
-    require_skillet_type,
-    load_variables
-)
 
 """
 Execute a validation skillet and generate results
 """
 
-class ValidateCommand(BaseCommand):
 
+class ValidateCommand(BaseCommand):
     sli_command = 'validate'
     short_desc = 'Execute a validation skillet of type pan_validation'
 
@@ -27,7 +27,7 @@ class ValidateCommand(BaseCommand):
         Generate panforge report if requested
         """
 
-        exe = self.sli.skillet.execute(self.sli.context) 
+        exe = self.sli.skillet.execute(self.sli.context)
 
         if self.sli.verbose:
             self.print_verbose(exe)
@@ -46,7 +46,7 @@ class ValidateCommand(BaseCommand):
         for snippet_name in exe['pan_validation']:
             snippet = exe['pan_validation'][snippet_name]
             print(snippet_name)
-            print('-'*len(snippet_name))
+            print('-' * len(snippet_name))
             if 'results' in snippet:
                 result = "Passed" if snippet['results'] else "Failed"
                 print(f"   Validation Results: {result}")
@@ -60,12 +60,11 @@ class ValidateCommand(BaseCommand):
                 for key in snippet['meta']:
                     print(f"      {key}: {snippet['meta'][key]}")
             print()
-        
 
     def print_summary(self, exe):
         results = [
             {
-                'name':x,
+                'name': x,
                 'result': "Passed" if exe['snippets'][x] else "Failed"
             }
             for x in exe['snippets']

@@ -1,13 +1,13 @@
-from .base import BaseCommand
 from sli.tools import print_table
+from .base import BaseCommand
 
 """
 Load and display a list of skillets in a directory.
 Display any errors
 """
 
-class LoadCommand(BaseCommand):
 
+class LoadCommand(BaseCommand):
     sli_command = 'load'
     short_desc = 'Load and display all skillets of any type'
 

@@ -1,8 +1,9 @@
-from .base import BaseCommand
 import json
 
-class ShowContext(BaseCommand):
+from .base import BaseCommand
 
+
+class ShowContext(BaseCommand):
     sli_command = 'show_context'
     short_desc = 'Print out contents of an existing context'
     no_skillet = True

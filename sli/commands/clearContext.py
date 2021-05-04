@@ -1,7 +1,7 @@
 from .base import BaseCommand
 
-class ClearContext(BaseCommand):
 
+class ClearContext(BaseCommand):
     """
     Clear SLI context.
     Pass the 'creds' argument to only remove non credential parameters
