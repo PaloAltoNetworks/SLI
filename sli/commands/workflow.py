@@ -6,12 +6,14 @@ from sli.decorators import require_single_skillet
 from sli.decorators import require_skillet_type
 from .base import BaseCommand
 
+from sli.tools import render_expression
+from skilletlib.snippet.workflow import WorkflowSnippet
 
 def should_execute(snippet, context):
     """Determine if a workflow snippet should be exectued"""
     if not 'when' in snippet:
         return True
-    return Template("{{" + snippet['when'] + "}}").render(context) == "True"
+    return render_expression(snippet['when'], context) == "True"
 
 
 def print_validation_output(exe):
@@ -41,6 +43,11 @@ class WorkflowCommand(BaseCommand):
             # Verify if a snippet should be run
             if not should_execute(snippet, self.sli.context):
                 continue
+
+            # Handle transform
+            if "transform" in snippet:
+                workflow_snippet = WorkflowSnippet(snippet, self.sli.skillet, self.sli.sl)
+                self.sli.context.update(workflow_snippet.transform_context(self.sli.context))
 
             # Find and execute specific skillet
             snippet_skillet = [x for x in self.sli.skillets if x.name == snippet['name']]

@@ -4,6 +4,16 @@ from os.path import expanduser
 from panforge import Report
 from getpass import getpass
 import socket
+from jinja2 import Environment
+
+def render_template(template_text, context):
+    """Render a template loaded from a string with an appropriate environment"""
+    env = Environment(extensions=['jinja2_ansible_filters.AnsibleCoreFiltersExtension'])
+    return env.from_string(template_text).render(context)
+
+def render_expression(expression, context):
+    """Shortcut to render an expression, adding {{}} brackets to a template"""
+    return render_template("{{" + expression + "}}", context)
 
 def is_ip(ip):
     """

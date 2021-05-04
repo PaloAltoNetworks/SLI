@@ -3,3 +3,4 @@ click
 panforge
 jmespath
 pycryptodome
+jinja2-ansible-filters
