@@ -2,11 +2,13 @@
 
   
 
-SLI (sly) - Skillet Line Interface from Palo Alto Netowrks
+SLI (sly) - Skillet Line Interface from Palo Alto Networks
 
   
 
-A CLI interface for interacting with skillets
+A CLI interface for interacting with skillets. Skillets are sharable sets of configuration elements for PAN-OS devices.
+See [Live](https://live.paloaltonetworks.com/t5/quickplay-solutions-discussions/the-palo-alto-networks-skillet-story/m-p/308056)
+for more information.
 
   
 
@@ -58,7 +60,10 @@ pip install -e .
 
 ## Loading Skillets
 
-When SLI is run, if your command requires skillets, they are all loaded from your working directory by default, unless you specify otherwise. Test loading skillets with the following command. This command changes nothing in your sli environment, the -sd parameter is supported by all commands that require skillets.
+When SLI is run, if your command requires skillets, they are all loaded from your working directory by default, unless
+you specify otherwise. Test loading skillets with the following command. This command changes nothing in your 
+sli environment, the -sd parameter (skillet directory) is supported by all commands that require skillets.
+
 ```
  # Load and view skillets from current working directory
 sli load
@@ -79,26 +84,36 @@ Validation example
 ```
 sli validate -sd C:\skillets --name skillet_name
 ```
-Both of the above commands will prompt the user for a target host, username and password. Those can be provided through the command using parameters
+Both of the above commands will prompt the user for a target host, username and password. 
+Those can be provided through the command using parameters
 ```
 sli validate -sd C:\skillets --name skillet_name -d device_ip -u username -p password
 ```
 
 # Context Manager
 
-SLI has a context manager that allows data to be stored and reused between subsequent commands. Context data is stored in disk in your home directory under ".sli/".
+SLI has a context manager that allows data to be stored and reused between subsequent commands. 
+Context data is stored in disk in your home directory under ".sli/".
 
 You can use the context manager by specifying the -uc flag in your SLI commands
 ```
 sli validate -sd C:\skillets --name skillet_name -uc
 ```
-This will populate the default context with output from the skillet, including configuration and device credentials. If the default context is already populated, that data will be loaded prior to execution only because the -uc flag is present.
+This will populate the default context with output from the skillet, including configuration and device credentials. 
+If the default context is already populated, that data will be loaded prior to execution only because the -uc flag is 
+present.
 
-As device credentials are stored in the context, you only need to specify them during the first command when using the context manager.
+As device credentials are stored in the context, you only need to specify them during the first command when using 
+the context manager.
+
+| :exclamation:  By default, the context files are NOT encrypted!   |
+|:-------------------------------------------------------------------|
+| See `Context Encryption` below to ensure your device credentials or other sensitive information is protected! |
 
 ## Named Contexts
 
-You can store data in multiple named contexts other than the default to be able to test multiple configurations at once using the -cn parameter
+You can store data in multiple named contexts other than the default to be able to test multiple configurations at 
+once using the -cn parameter
 ```
  # When specifying -cn, you do not need -uc
  # This will store all context data in a context named my_context
@@ -128,7 +143,8 @@ sli show_context -nc
 
 ## Context Encryption
 
-Context data is not encrypted on disk by default. You can however encrypt your context by adding an encryption password with the -ec (encrypt-context) flag or -cp (context-password) parameter
+Context data is not encrypted on disk by default. You can however encrypt your context by adding an encryption 
+password with the -ec (encrypt-context) flag or -cp (context-password) parameter
 ```
  # This will prompt you for an encryption password
 sli validate -sd C:\skillets --name skillet_name -ec
@@ -136,15 +152,19 @@ sli validate -sd C:\skillets --name skillet_name -ec
  # This sets the context password to context_password
 sli validate -sd C:\skillets --name skillet_name -cp context_password
 ```
-When accessed after creation, an encrypted context will prompt the user for the password unless specified with the -cp parameter.
+When accessed after creation, an encrypted context will prompt the user for the password unless specified with the 
+-cp parameter.
 
-An unencrypted context can be encrypted by specifying encryption when running a command that uses a given context, this cannot be undone.
+An unencrypted context can be encrypted by specifying encryption when running a command that uses a given context, 
+this cannot be undone.
 
 ## Commands
 
-  Other than executing skillets, certain commands are available which are useful for skillet development and shell scripting. The context manager is supported for commands that perform data retrieval and processing
+  Other than executing skillets, certain commands are available which are useful for skillet development and shell 
+  scripting. The context manager is supported for commands that perform data retrieval and processing
   
-  The capture command allows you to test capture_list, capture_object, and capture_expression snippets as they would be used in validation skillets
+  The capture command allows you to test capture_list, capture_object, and capture_expression snippets as they would 
+  be used in validation skillets
   ```
  # Test and output a capture_list that displays names of all decryption policies
 sli capture list  "/config/devices/entry[@name='localhost.localdomain']/vsys/entry/rulebase/decryption/rules/entry/@name"
