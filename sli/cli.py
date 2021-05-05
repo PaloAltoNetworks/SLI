@@ -1,7 +1,5 @@
 import click
-
 from sli.skilletLineInterface import SkilletLineInterface
-from sli.tools import load_config_file
 
 
 class FormatHelp(click.Command):
@@ -41,7 +39,7 @@ class FormatHelp(click.Command):
         context_settings={'allow_extra_args': True},
         no_args_is_help=True
     )
-@click.option("-c", "--config", help="Configuration file")
+@click.option("-e", "--environment", help="Environment file")
 @click.option("-cm", "--commit", is_flag=True, help="Commit configuration changes")
 @click.option("-v", "--verbose", is_flag=True, help="Verbose output")
 @click.option("-d", "--device", help="Device IP or hostname")
@@ -55,7 +53,7 @@ class FormatHelp(click.Command):
 @click.option("-uc", "--use-context", is_flag=True, help="Use a context manager, (global by default)")
 @click.option("-cn", "--context-name", help="Use a contexet manager other than global")
 @click.option("-ec", "--encrypt-context", is_flag=True, help="Encrypt the context object")
-@click.option("-cp", "--context-password", help="Password for encrypted context")
+@click.option("-cp", "--context-password", help="Password for encrypted context", default="")
 @click.option("-nc", "--no-config", is_flag=True, help="Hide full device configuration from output", )
 @click.option("-of", "--output-format", help="Output format, xml or set",
               type=click.Choice(["xml", "set"]), default="xml"
@@ -64,14 +62,8 @@ class FormatHelp(click.Command):
 @click.pass_context
 def cli(ctx, action, **kwargs):
 
-    # Load configuration options from file, override with click parameters
-    config_obj = load_config_file(kwargs.get('config'))
-    for key in kwargs:
-        if kwargs[key] is not None:
-            config_obj[key] = kwargs[key]
-
-    # Instantiate skillet and execute command
-    sli = SkilletLineInterface(config_obj, action, ctx.args)
+    options = {key: kwargs[key] for key in kwargs if kwargs[key] is not None}
+    sli = SkilletLineInterface(options, action, ctx.args)
     sli.execute()
 
 

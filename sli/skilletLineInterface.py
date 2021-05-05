@@ -25,9 +25,12 @@ class SkilletLineInterface():
             self._load_skillets()
             self._verify_loaded_skillets()
 
+        # Load context if requested, load only a specified environment otherwise
         self.cm = ContextManager(self.options)
         if not self.no_context:
             self.context = self.cm.load_context()
+        else:
+            self.context = self.cm.load_environment()
         self.skillet = None  # Active running skillet
 
     def _unpack_options(self):
