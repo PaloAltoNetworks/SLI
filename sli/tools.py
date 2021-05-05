@@ -136,8 +136,10 @@ def get_variable_input(var, context):
     type_hint = var.get('type_hint')
     name = var.get('name')
     desc = var.get('description', name)
+
     if not name:
         raise ValueError('Input variable missing name')
+
     ret_dict = {}
 
     # Check for a toggle hint and return if not applicable
@@ -146,7 +148,17 @@ def get_variable_input(var, context):
             return ret_dict
 
     if type_hint == 'checkbox':
-        cbx_list = var.get('cbx_list', [])
+
+        if 'source' in var:
+            raw_dd_list = context.get(var["source"], [])
+            if not isinstance(raw_dd_list, list):
+                raw_dd_list = [raw_dd_list]
+
+            cbx_list = [{"key": x, "value": x} for x in raw_dd_list]
+
+        else:
+            cbx_list = var.get('cbx_list', [])
+
         print(f"\n{desc}\n{'-'*len(desc)}\n")
 
         # Get inputs from user until user confirms they are ok
@@ -174,19 +186,28 @@ def get_variable_input(var, context):
 
     elif type_hint == 'dropdown':
         print(f"\n{desc}")
-        i = 1
-        for val in var['dd_list']:
-            print(f"   {i}. {var['dd_list'][i-1]['key']}")
-            i += 1
+
+        if 'source' in var:
+            raw_dd_list = context.get(var["source"], [])
+            if not isinstance(raw_dd_list, list):
+                raw_dd_list = [raw_dd_list]
+
+            dd_list = [{"key": x, "value": x} for x in raw_dd_list]
+        else:
+            dd_list = var.get('dd_list', [])
+
+        for i in range(0, len(dd_list)):
+            print(f"   {i + 1}. {dd_list[i-1]['key']}")
+
         valid_response = False
         while not valid_response:
             response = input("Please enter line number of selection: ")
             if response.isdigit() and '.' not in response:
                 response_index = int(response) - 1
-                if response_index < 0 or response_index > len(var['dd_list']):
-                    print(f"Please input a number between 1 and {len(var['dd_list'])}")
+                if response_index < 0 or response_index > len(dd_list):
+                    print(f"Please input a number between 1 and {len(dd_list)}")
                 else:
-                    value = var['dd_list'][response_index]['value']
+                    value = dd_list[response_index]['value']
                     ret_dict[name] = value
                     valid_response = True
             else:
@@ -195,7 +216,7 @@ def get_variable_input(var, context):
     elif type_hint == 'list':
         valid_response = False
         while not valid_response:
-            response = input(f"{desc} (comma seperated list): ")
+            response = input(f"{desc} (comma separated list): ")
             rl = [x.strip() for x in response.split(',') if len(x)]
             print("You entered:")
             if len(rl):
