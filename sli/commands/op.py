@@ -35,8 +35,8 @@ class OpCommand(BaseCommand):
     Example: Get system info and return information as XML text
         sli op "show system info"
 
-    Example: Get system info as a JSON object
-        sli op "show system info" object
+    Example: Get system info, using XML command syntax, as a JSON object
+        sli op "<show><system><info/></system></show>" object
 
     Example: get system info as a JSON object and use an XPATH filter for only the plugin_versions
         sli op "show system info" object "./plugin_versions"

@@ -7,11 +7,12 @@ class DiffCommand(BaseCommand):
     short_desc = "Get the differences between two config versions, candidate, running, previous running, etc"
     no_skillet = True
     help_text = """
-        Diff module requires 0, 1, or 2 arguments.
+        Diff module requires 0 to 3 arguments.
 
-        - 0 arguments: Diff candidate config from running config
+        - 0 arguments: Diff running config from previous running config
         - 1 argument: Diff previous config or named config against specified running config
         - 2 arguments: Diff first arg named config against second arg named config
+        - 3 arguments: Diff first arg named config against second arg named config and save diffs into the context
 
         A named config can be either a stored config, candidate, running or a number.
         Positive numbers must be used to specify iterations, 1 means 1 config revision ago
@@ -32,6 +33,10 @@ class DiffCommand(BaseCommand):
         Example: Get the diff between the second and third most recent running configs
 
             user$ sli diff 3 2
+
+        Example: Get a diff and save as 'candidate_diff' into the context
+
+            user$ sli diff running candidate candidate_diff -uc
     """
 
     @require_ngfw_connection_params
@@ -43,13 +48,19 @@ class DiffCommand(BaseCommand):
         def fixup(x):
             return f"-{x}" if x.isdigit() else x
 
+        capture_var = None
+
         if len(self.args) == 1:
             latest_name = "running"
             source_name = fixup(self.args[0])
         elif len(self.args) == 2:
             source_name = fixup(self.args[0])
             latest_name = fixup(self.args[1])
-        elif len(self.args) > 2:
+        elif len(self.args) == 3:
+            source_name = fixup(self.args[0])
+            latest_name = fixup(self.args[1])
+            capture_var = self.args[2]
+        elif len(self.args) > 3:
             self._print_usage()
             return
         else:
@@ -67,6 +78,11 @@ class DiffCommand(BaseCommand):
                 print(f'xpath: {obj["xpath"]}')
                 print(f'element: {obj["element"]}\n\n')
         else:
-            output = pan.generate_set_cli_from_configs(previous_config, latest_config)
-            for line in output:
+            diff = pan.generate_set_cli_from_configs(previous_config, latest_config)
+            for line in diff:
                 print(line)
+
+        # Update context if using context
+        if self.sli.cm.use_context and capture_var is not None:
+            self.sli.context[capture_var] = diff
+            print(f'Output added to context as {capture_var}')
