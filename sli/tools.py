@@ -1,4 +1,3 @@
-import yaml
 import os
 from os.path import expanduser
 from panforge import Report
@@ -82,19 +81,6 @@ def print_table(objs, defs):
                 text = o[defs[k]]
             row += get_cell(text, cols[k]["width"])
         print(row)
-
-
-def load_config_file(fileName):
-    """
-    Attempt to load configuration file, return empty dict if not specified
-    """
-    if not fileName:
-        return {}
-    if not os.path.exists(fileName):
-        print('Specified configuration file not found.')
-        exit(1)
-    with open(fileName, 'r') as f:
-        return yaml.safe_load(f)
 
 
 def generate_report(out_file, data, report_dir, header=None):

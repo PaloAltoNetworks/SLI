@@ -1,6 +1,7 @@
 from sli.tools import expandedHomePath
 import os
 import json
+import yaml
 import getpass
 from sli.encrypt import Encryptor
 
@@ -18,7 +19,7 @@ class ContextManager():
         self.encrypt_context = self.options.get('encrypt_context')
         self.context_dir = expandedHomePath('.sli/context')
         self.context_file = ''  # Populated when loading context
-        self.context_password = options.get('context_password', '')
+        self.context_password = options.get("context_password", "")
         if len(self.context_password) > 0:
             self.encrypt_context = True
 
@@ -69,6 +70,19 @@ class ContextManager():
         self.context_password = getpass.getpass('Context encryption password: ')
         return self.context_password
 
+    def load_environment(self):
+        """Load and return specified environment file from options"""
+        context = {}
+        environment_file = self.options.get("environment", "")
+        if not len(environment_file):
+            return context
+        with open(environment_file, 'r') as f:
+            if environment_file.endswith(".yaml"):
+                context = yaml.safe_load(f)
+            else:
+                context = json.loads(f.read())
+        return context
+
     def load_context(self, from_file=''):
         """Load a context from disk"""
         context = {}
@@ -84,8 +98,9 @@ class ContextManager():
         if not context_name == 'default' and not len(from_file):
             self.use_context = True
 
-        # If not loading a context, return the blank context
+        # If not loading a context, return the context with environment
         if not self.use_context and not len(from_file):
+            context.update(self.load_environment())
             return context
 
         # If specified context file not found, return blank context
@@ -118,10 +133,13 @@ class ContextManager():
                     print('Invalid context decryption key\n')
                     self.context_password = ''
                     password = self._get_context_password()
+            decrypted_dict.update(self.load_environment())
             return decrypted_dict
 
         # Assume unencrypted context content, return context
-        return context_file_json.get('context', context)
+        context.update(context_file_json.get('context', context))
+        context.update(self.load_environment())
+        return context
 
     def save_context(self, context):
         """Save a context to disk"""
