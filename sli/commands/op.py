@@ -48,7 +48,7 @@ class OpCommand(BaseCommand):
         capture_var = ''
         if len(self.args) == 4:
             capture_var = self.args[3]
-        if not capture_method in valid_methods:
+        if capture_method not in valid_methods:
             print(f'Invalid method - {capture_method}')
             print_usage()
             return
@@ -62,13 +62,13 @@ class OpCommand(BaseCommand):
         sl = SkilletLoader()
         skillet = sl.create_skillet(skillet_dict)
 
-        # Execute skillet and extract values from target 
+        # Execute skillet and extract values from target
         exe = skillet.execute(self.sli.context)
         if not skillet.success:
             print('Unable to execute command')
             return
 
-        # Print captured JSON 
+        # Print captured JSON
         output = exe['outputs']['op_output']
         print(json.dumps(output, indent=4))
 

@@ -10,9 +10,10 @@ credit to: https://stackoverflow.com/questions/12524994/encrypt-decrypt-using-py
 Modified to accept strings and dictionaries.
 """
 
+
 class Encryptor(object):
 
-    def __init__(self, key): 
+    def __init__(self, key):
         self.bs = AES.block_size
         self.key = hashlib.sha256(key.encode()).digest()
 
@@ -45,7 +46,7 @@ class Encryptor(object):
         iv = enc[:AES.block_size]
         cipher = AES.new(self.key, AES.MODE_CBC, iv)
         return self._unpad(cipher.decrypt(enc[AES.block_size:])).decode('utf-8')
-    
+
     def encrypt_dict(self, obj):
         """
         Encrypt a dictionary, returning encrypted string encoded in Base64
@@ -57,7 +58,7 @@ class Encryptor(object):
         :rtype: str
         """
         return self.encrypt(json.dumps(obj))
-    
+
     def decrypt_dict(self, enc):
         """
         Decrypt and return a dictionary stored in encrypted string enc

@@ -8,6 +8,7 @@ from sli.encrypt import Encryptor
 SLI's context manager, load, manipulate, and store context objects
 """
 
+
 class ContextManager():
 
     def __init__(self, options):
@@ -16,11 +17,11 @@ class ContextManager():
         self.use_context = self.options.get('use_context')
         self.encrypt_context = self.options.get('encrypt_context')
         self.context_dir = expandedHomePath('.sli/context')
-        self.context_file = '' # Populated when loading context
+        self.context_file = ''  # Populated when loading context
         self.context_password = options.get('context_password', '')
         if len(self.context_password) > 0:
             self.encrypt_context = True
-    
+
     @staticmethod
     def _setup_directory():
         """Create initial directories required for context management in SLI"""
@@ -28,6 +29,7 @@ class ContextManager():
         for directory in directories:
             if not os.path.exists(directory):
                 os.mkdir(directory)
+
     @staticmethod
     def remove_context(context_name):
         """Remove a specified context file"""
@@ -37,12 +39,12 @@ class ContextManager():
             return False
         os.remove(context_file)
         return True
-    
+
     def clean_context(self, context_name):
         """Remove all keys from a contexts except NGFW credentials"""
         context = self.load_context(from_file=context_name)
         creds_strings = "TARGET_IP", "TARGET_USERNAME", "TARGET_PASSWORD"
-        keys = [x for x in context.keys() if not x in creds_strings]
+        keys = [x for x in context.keys() if x not in creds_strings]
         for key in keys:
             context.pop(key)
         self.use_context = True
@@ -59,14 +61,13 @@ class ContextManager():
                 contents = json.loads(f.read())
             contexts.append({'name': cf.replace('.json', ''), 'encrypted': contents.get('encrypted')})
         return contexts
-    
+
     def _get_context_password(self):
         """Returns user supplied password for context"""
         if len(self.context_password) > 0:
             return self.context_password
         self.context_password = getpass.getpass('Context encryption password: ')
         return self.context_password
-
 
     def load_context(self, from_file=''):
         """Load a context from disk"""
@@ -90,7 +91,7 @@ class ContextManager():
         # If specified context file not found, return blank context
         if not os.path.exists(self.context_file):
             return context
-        
+
         try:
             with open(self.context_file, 'r') as f:
                 context_file_json = json.loads(f.read())
@@ -100,7 +101,7 @@ class ContextManager():
 
         # Check for encryption and decrypt stored value if found
         if context_file_json.get('encrypted'):
-            self.encrypt_context = True # Make sure we encrypt the written file at the end
+            self.encrypt_context = True  # Make sure we encrypt the written file at the end
             content = context_file_json.get('encrypted_context')
             if not content:
                 raise ValueError(
@@ -122,14 +123,13 @@ class ContextManager():
         # Assume unencrypted context content, return context
         return context_file_json.get('context', context)
 
-    
     def save_context(self, context):
         """Save a context to disk"""
 
         # If not configured to use a context do nothing
         if not self.use_context:
             return
-        
+
         # If required write encrypted context file
         if self.encrypt_context:
 

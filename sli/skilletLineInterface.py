@@ -1,14 +1,10 @@
 from skilletlib import SkilletLoader
-from sli.tools import print_table
-from getpass import getpass
-from panforge import Report
 from inspect import isclass
-import os
-
 from sli import commands
 from types import ModuleType
 
 from sli.contextManager import ContextManager
+
 
 class SkilletLineInterface():
 
@@ -21,9 +17,8 @@ class SkilletLineInterface():
         self._load_commands()
         self._verify_command()
         self.sl = SkilletLoader()
-        self.no_skillet = getattr(self.command_map[self.action], 'no_skillet', False) == True
-        self.no_context = getattr(self.command_map[self.action], 'no_context', False) == True
-
+        self.no_skillet = getattr(self.command_map[self.action], 'no_skillet', False) is True
+        self.no_context = getattr(self.command_map[self.action], 'no_context', False) is True
 
         # Load skillets only if the command requires them
         if not self.no_skillet:
@@ -33,8 +28,8 @@ class SkilletLineInterface():
         self.cm = ContextManager(self.options)
         if not self.no_context:
             self.context = self.cm.load_context()
-        self.skillet = None # Active running skillet
-    
+        self.skillet = None  # Active running skillet
+
     def _unpack_options(self):
         """Unpack options onto self where required"""
         for opt in ('verbose', 'commit', 'report', 'loader_error', 'output_format', 'no_config'):
@@ -44,7 +39,7 @@ class SkilletLineInterface():
         # If a report file was specified, assume we want to create it
         if self.report_file:
             self.generate_report = True
-    
+
     def _load_commands(self, command_map=None):
         """
         Loads a list of commands from the sli.commands package. Does so by iterating over contents of the
@@ -68,10 +63,10 @@ class SkilletLineInterface():
                         command_string = getattr(item_attr_obj, 'sli_command', '')
                         if len(command_string) > 0:
                             command_map[command_string] = item_attr_obj
-    
+
     def _verify_command(self):
         """Called in __init__ to verify a submitted command is valid before running SkilletLoader"""
-        if not self.action in self.command_map:
+        if self.action not in self.command_map:
             print('Invalid action, run "sli --help" for list of available actions')
             exit(1)
 
@@ -92,7 +87,7 @@ class SkilletLineInterface():
         if len(self.skillets) < 1:
             print("No skillets were loaded.")
             exit(1)
-    
+
     @classmethod
     def get_commands(self):
         """Load commands for purposes other than execution"""
@@ -107,7 +102,7 @@ class SkilletLineInterface():
         action_obj = self.command_map[self.action](self)
         action_obj.execute()
 
-        #Update context with new keys from skillet run
+        # Update context with new keys from skillet run
         if not self.no_context:
             skillet_context = getattr(self.skillet, 'context', None)
             if skillet_context:

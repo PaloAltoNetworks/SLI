@@ -3,6 +3,7 @@ import click
 from sli.skilletLineInterface import SkilletLineInterface
 from sli.tools import load_config_file
 
+
 class FormatHelp(click.Command):
     def format_help(self, ctx, formatter):
         super().format_help(ctx, formatter)
@@ -35,9 +36,10 @@ class FormatHelp(click.Command):
         super().parse_args(ctx, args)
 
 
-@click.command(cls=FormatHelp,
-    context_settings={'allow_extra_args': True},
-    no_args_is_help=True
+@click.command(
+        cls=FormatHelp,
+        context_settings={'allow_extra_args': True},
+        no_args_is_help=True
     )
 @click.option("-c", "--config", help="Configuration file")
 @click.option("-cm", "--commit", is_flag=True, help="Commit configuration changes")

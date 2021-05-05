@@ -17,7 +17,7 @@ class ConfigureCommand(BaseCommand):
     @require_ngfw_connection_params
     @load_variables
     def run(self):
-        exe = self.sli.skillet.execute(self.sli.context)
+        self.sli.skillet.execute(self.sli.context)
         if self.sli.commit:
             print('Committing configuration...')
             self.sli.skillet.panoply.commit()

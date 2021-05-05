@@ -1,5 +1,3 @@
-from jinja2 import Template
-
 from sli.decorators import load_variables
 from sli.decorators import require_ngfw_connection_params
 from sli.decorators import require_single_skillet
@@ -9,9 +7,10 @@ from .base import BaseCommand
 from sli.tools import render_expression
 from skilletlib.snippet.workflow import WorkflowSnippet
 
+
 def should_execute(snippet, context):
     """Determine if a workflow snippet should be exectued"""
-    if not 'when' in snippet:
+    if 'when' not in snippet:
         return True
     return render_expression(snippet['when'], context) == "True"
 

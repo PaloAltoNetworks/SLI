@@ -17,7 +17,7 @@ for (_, module_name, _) in iter_modules([package_dir]):
         # Evaluate each class found in the module
         if attr is BaseCommand:
             continue
-        if isclass(attr):  
+        if isclass(attr):
             if not len(getattr(attr, 'sli_command', '')) > 0:
                 continue
             if not issubclass(attr, BaseCommand):

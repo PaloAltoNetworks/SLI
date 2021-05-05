@@ -30,10 +30,10 @@ class Capture(BaseCommand):
     help_text = """
     Usage for capture module:
         sli capture [method] [query] [context-variable:optional]
-        
+
     valid Methods:
         'list', 'object', 'expression'
-        
+
     """
 
     @require_ngfw_connection_params
@@ -49,7 +49,7 @@ class Capture(BaseCommand):
         capture_var = ''
         if len(self.args) == 3:
             capture_var = self.args[2]
-        if not capture_method in valid_methods:
+        if capture_method not in valid_methods:
             print(f'Invalid method - {capture_method}')
             print(self.help_text)
             return
@@ -62,13 +62,13 @@ class Capture(BaseCommand):
         sl = SkilletLoader()
         skillet = sl.create_skillet(skillet_dict)
 
-        # Execute skillet and extract values from target 
+        # Execute skillet and extract values from target
         exe = skillet.execute(self.sli.context)
         if not skillet.success:
             print('Unable to execute command')
             return
 
-        # Print captured JSON 
+        # Print captured JSON
         output = exe['outputs']['capture_test']
         print(json.dumps(output, indent=4))
 

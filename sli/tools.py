@@ -5,15 +5,19 @@ from panforge import Report
 from getpass import getpass
 import socket
 from jinja2 import Environment
+import jmespath
+
 
 def render_template(template_text, context):
     """Render a template loaded from a string with an appropriate environment"""
     env = Environment(extensions=['jinja2_ansible_filters.AnsibleCoreFiltersExtension'])
     return env.from_string(template_text).render(context)
 
+
 def render_expression(expression, context):
     """Shortcut to render an expression, adding {{}} brackets to a template"""
     return render_template("{{" + expression + "}}", context)
+
 
 def is_ip(ip):
     """
@@ -23,7 +27,7 @@ def is_ip(ip):
         try:
             socket.inet_pton(family, ip)
             return True
-        except:
+        except Exception:
             pass
     return False
 
@@ -66,6 +70,7 @@ def print_table(objs, defs):
             row += get_cell(text, cols[k]["width"])
         print(row)
 
+
 def load_config_file(fileName):
     """
     Attempt to load configuration file, return empty dict if not specified
@@ -77,6 +82,7 @@ def load_config_file(fileName):
         exit(1)
     with open(fileName, 'r') as f:
         return yaml.safe_load(f)
+
 
 def generate_report(out_file, data, report_dir, header=None):
     """
@@ -92,8 +98,9 @@ def generate_report(out_file, data, report_dir, header=None):
     report.load_data(data)
     report_html = report.render_html()
     with open(out_file, 'w') as f:
-        f.write(report.html)
+        f.write(report_html)
     print(f'Report written to {out_file}')
+
 
 def input_yes_no(prompt, ret_value, ret_false=None):
     """
@@ -108,6 +115,7 @@ def input_yes_no(prompt, ret_value, ret_false=None):
             return ret_false
         print('Please input either y or n')
 
+
 def get_variable_input(var, context):
     """
     Get input from user in reference to var, being a skillet variable object
@@ -116,7 +124,7 @@ def get_variable_input(var, context):
     name = var.get('name')
     desc = var.get('description', name)
     if not name:
-        raise ValueError(f'Input variable missing name')
+        raise ValueError('Input variable missing name')
     ret_dict = {}
 
     # Check for a toggle hint and return if not applicable
@@ -141,7 +149,7 @@ def get_variable_input(var, context):
             # Display all inputs
             check = []
             for cbx in cbx_list:
-                check.append({'name':cbx['key'], 'value': 'Yes' if cbx['value'] in input_list else 'No'})
+                check.append({'name': cbx['key'], 'value': 'Yes' if cbx['value'] in input_list else 'No'})
             print('')
             print_table(check, {'Input': 'name', 'Value': 'value'})
             print('')
@@ -151,7 +159,7 @@ def get_variable_input(var, context):
         # Add input to ret_dict
         ret_dict[name] = input_list
 
-    elif type_hint=='dropdown':
+    elif type_hint == 'dropdown':
         print(f"\n{desc}")
         i = 1
         for val in var['dd_list']:
@@ -160,8 +168,8 @@ def get_variable_input(var, context):
         valid_response = False
         while not valid_response:
             response = input("Please enter line number of selection: ")
-            if response.isdigit() and not '.' in response:
-                response_index =  int(response) - 1
+            if response.isdigit() and '.' not in response:
+                response_index = int(response) - 1
                 if response_index < 0 or response_index > len(var['dd_list']):
                     print(f"Please input a number between 1 and {len(var['dd_list'])}")
                 else:
@@ -171,7 +179,7 @@ def get_variable_input(var, context):
             else:
                 print("Please input a number")
 
-    elif type_hint=='list':
+    elif type_hint == 'list':
         valid_response = False
         while not valid_response:
             response = input(f"{desc} (comma seperated list): ")
@@ -187,7 +195,7 @@ def get_variable_input(var, context):
                 ret_dict[name] = rl
                 valid_response = True
 
-    elif type_hint=='ip_address':
+    elif type_hint == 'ip_address':
         valid_response = False
         while not valid_response:
             response = input(f"{var.get('description', name)} (ip): ")
@@ -197,7 +205,7 @@ def get_variable_input(var, context):
                 print("Invalid IP address.")
         ret_dict[name] = response
 
-    elif type_hint=='password':
+    elif type_hint == 'password':
         valid_response = False
         while not valid_response:
             password = getpass(f"{var.get('description', name)}: ")
@@ -208,16 +216,17 @@ def get_variable_input(var, context):
                 print("Password and confirm do not match!")
         ret_dict[name] = password
 
-    elif type_hint=='text':
+    elif type_hint == 'text':
         ret_dict[name] = input(f"{var.get('description', name)}: ")
 
-    elif type_hint=='hidden':
+    elif type_hint == 'hidden':
         ret_dict[name] = var.get('default')
 
     else:
         raise ValueError(f'Unsupported input variable type of {type_hint} in var {name}')
 
     return ret_dict
+
 
 def expandedHomePath(directory):
     """Returns a local OS formatted directory string"""
