@@ -34,10 +34,10 @@ class ValidateCommand(BaseCommand):
         self.print_summary(exe)
 
         if getattr(self.sli, 'generate_report', False):
-            header = {'Host': self.sli.options['device']}
+            header = {'Host': self.sli.context['TARGET_IP']}
             out_file = getattr(self.sli, 'report_file', '')
             if len(out_file) < 1:
-                out_file = f'{self.sli.options["device"]}-{self.sli.skillet.name}.html'
+                out_file = f'{self.sli.options["TARGET_IP"]}-{self.sli.skillet.name}.html'
             report_dir = os.path.sep.join([self.sli.skillet.path, 'report'])
             generate_report(out_file, exe['pan_validation'], report_dir, header=header)
 
