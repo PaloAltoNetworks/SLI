@@ -40,7 +40,8 @@ class DiffCommand(BaseCommand):
         """Get a diff of running and candidate configs"""
 
         # Any digit arguments should be converted to negative
-        def fixup(x): return f"-{x}" if x.isdigit() else x
+        def fixup(x):
+            return f"-{x}" if x.isdigit() else x
 
         if len(self.args) == 1:
             latest_name = "running"
@@ -49,7 +50,7 @@ class DiffCommand(BaseCommand):
             source_name = fixup(self.args[0])
             latest_name = fixup(self.args[1])
         elif len(self.args) > 2:
-            print(self.help_text)
+            self._print_usage()
             return
         else:
             # If no arguments supplied, assume diff previous running vs running

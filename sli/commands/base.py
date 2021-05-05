@@ -10,4 +10,12 @@ class BaseCommand():
 
     def run(self):
         """ Should be overridden by child classes"""
-        raise Exception(f"The SLI module {self.sli_command} has not properly overriden the run function")
+        raise Exception(f"The SLI module {self.sli_command} has not properly overridden the run function")
+
+    def _print_usage(self):
+        if hasattr(self, 'help_text'):
+            print(self.help_text)
+        elif hasattr(self, 'short_desc'):
+            print(self.short_desc)
+        else:
+            print(f"{self.sli_command} does not provide any help")
