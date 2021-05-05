@@ -83,6 +83,6 @@ class DiffCommand(BaseCommand):
                 print(line)
 
         # Update context if using context
-        if self.sli.cm.use_context and len(capture_var) > 1:
+        if self.sli.cm.use_context and capture_var is not None:
             self.sli.context[capture_var] = diff
             print(f'Output added to context as {capture_var}')
