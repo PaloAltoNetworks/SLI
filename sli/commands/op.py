@@ -31,19 +31,19 @@ class OpCommand(BaseCommand):
     help_text = """
     Usage for 'op' module:
         sli op [cmd] [capture_method] [query] [context-variable:optional]
-        
-    Example: Get system info and return information as XML text 
+
+    Example: Get system info and return information as XML text
         sli op "show system info"
-        
+
     Example: Get system info as a JSON object
-        sli op "show system info" object 
-    
+        sli op "show system info" object
+
     Example: get system info as a JSON object and use an XPATH filter for only the plugin_versions
         sli op "show system info" object "./plugin_versions"
-        
+
     Example: get system info and only return the value of the sw-version tag
         sli op "show system info" value "./sw-version"
-    
+
     Example: get system info and only return the value of the sw-version tag and store it in the context as 'sw'
         sli op "show system info" text "./sw-version" sw -uc
     """
