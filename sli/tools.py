@@ -8,6 +8,19 @@ from jinja2 import Environment
 import jmespath
 
 
+def get_var(var, args, context):
+    """Get a var by searching args and the context, else ask the user"""
+    args = {x.split('=')[0]: x.split('=')[1] for x in args if '=' in x}
+    if var['name'] in args:
+        # First order of preference is to use a CLI provided parameter
+        context[var['name']] = args[var['name']]
+    elif var['name'] in context:
+        pass  # Use what's already in the context if no input specified
+    else:
+        # If input has not yet been supplied, get it from the user
+        context.update(get_variable_input(var, context))
+
+
 def render_template(template_text, context):
     """Render a template loaded from a string with an appropriate environment"""
     env = Environment(extensions=['jinja2_ansible_filters.AnsibleCoreFiltersExtension'])
@@ -16,7 +29,7 @@ def render_template(template_text, context):
 
 def render_expression(expression, context):
     """Shortcut to render an expression, adding {{}} brackets to a template"""
-    return render_template("{{" + expression + "}}", context)
+    return render_template("{{" + str(expression) + "}}", context)
 
 
 def is_ip(ip):

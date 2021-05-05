@@ -4,7 +4,7 @@ from sli.decorators import require_single_skillet
 from sli.decorators import require_skillet_type
 from .base import BaseCommand
 
-from sli.tools import render_expression
+from sli.tools import render_expression, get_var
 from skilletlib.snippet.workflow import WorkflowSnippet
 
 
@@ -58,6 +58,8 @@ class WorkflowCommand(BaseCommand):
                 return
             snippet_skillet = snippet_skillet[0]
             print(f"Running skillet {snippet_skillet.name} - {snippet_skillet.type}\n")
+            for var in snippet_skillet.variables:
+                get_var(var, self.args, self.sli.context)
             exe = snippet_skillet.execute(self.sli.context)
             self.sli.context.update(snippet_skillet.context)
 

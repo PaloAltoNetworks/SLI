@@ -1,7 +1,7 @@
 from getpass import getpass
 from skilletlib.panoply import Panoply
 from skilletlib.exceptions import TargetConnectionException
-from sli.tools import get_variable_input
+from sli.tools import get_var
 
 
 def require_ngfw_connection_params(func):
@@ -55,15 +55,7 @@ def load_variables(func):
 
     def wrap(command):
         for var in command.sli.skillet.variables:
-            args = {x.split('=')[0]: x.split('=')[1] for x in command.args if '=' in x}
-            if var['name'] in args:
-                # First order of preference is to use a CLI provided parameter
-                command.sli.context[var['name']] = args[var['name']]
-            elif var['name'] in command.sli.context:
-                pass  # Use what's already in the context if no input specified
-            else:
-                # If input has not yet been supplied, get it from the user
-                command.sli.context.update(get_variable_input(var, command.sli.context))
+            get_var(var, command.args, command.sli.context)
         return func(command)
     return wrap
 
