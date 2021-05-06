@@ -1,17 +1,21 @@
 import click
 from sli.skilletLineInterface import SkilletLineInterface
+from sli.tools import print_table
 
 
 class FormatHelp(click.Command):
     def format_help(self, ctx, formatter):
         super().format_help(ctx, formatter)
         commands = SkilletLineInterface.get_commands()
-        print('\nAvailable Commands:')
-        for command in commands:
-            c = commands[command]
-            short_desc = getattr(c, 'short_desc', None)
-            print(f'   {c.sli_command} {"- " + short_desc if short_desc else ""}')
-        print('')
+        print('\nAvailable Actions:\n')
+        command_list = [{"cmd": x, "desc": getattr(commands[x], "short_desc", None)} for x in commands.keys()]
+        print_table(
+            command_list,
+            {
+                "Command": "cmd",
+                "Description": "desc"
+            })
+        print("")
 
     def parse_args(self, ctx, args):
         """
