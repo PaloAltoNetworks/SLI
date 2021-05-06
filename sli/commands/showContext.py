@@ -17,7 +17,7 @@ class ShowContext(BaseCommand):
         if not len(context.keys()):
             print(f'Unable to load context {context_name}')
             return
-        if self.sli.no_config:
+        if self.sli.no_config and "config" in context:
             context.pop('config')
         hidden_fields = ['TARGET_PASSWORD']
         for hf in hidden_fields:

@@ -13,8 +13,6 @@ def get_var(var, args, context):
     if var['name'] in args:
         # First order of preference is to use a CLI provided parameter
         context[var['name']] = args[var['name']]
-    elif var['name'] in context:
-        pass  # Use what's already in the context if no input specified
     else:
         # If input has not yet been supplied, get it from the user
         context.update(get_variable_input(var, context))
@@ -122,6 +120,13 @@ def get_variable_input(var, context):
     type_hint = var.get('type_hint')
     name = var.get('name')
     desc = var.get('description', name)
+
+    # First get a default from the context, otherwise use the skillet definition
+    default = context.get(name, "")
+    if not len(default):
+        default = var.get("default", "")
+
+    default_str = f"({default})" if len(default) else ""
     if not name:
         raise ValueError('Input variable missing name')
     ret_dict = {}
@@ -166,10 +171,23 @@ def get_variable_input(var, context):
             i += 1
         valid_response = False
         while not valid_response:
-            response = input("Please enter line number of selection: ")
-            if response.isdigit() and '.' not in response:
+            default_key = ""
+            if len(default):
+                default_dd = [x for x in var["dd_list"] if x['value'] == default]
+                if not len(default_dd):
+                    # If there is a default from the context and it's not an option, clear the default
+                    default = ""
+                else:
+                    default_dd = default_dd[0]
+                    default_key = f"({default_dd['key']})"
+            response = input(f"Please enter line number of selection {default_key}: ")
+            if not len(response) and len(default):
+                # Assume default
+                response = default_dd["value"]
+                valid_response = True
+            elif response.isdigit() and '.' not in response:
                 response_index = int(response) - 1
-                if response_index < 0 or response_index > len(var['dd_list']):
+                if response_index < 0 or response_index >= len(var['dd_list']):
                     print(f"Please input a number between 1 and {len(var['dd_list'])}")
                 else:
                     value = var['dd_list'][response_index]['value']
@@ -216,7 +234,11 @@ def get_variable_input(var, context):
         ret_dict[name] = password
 
     elif type_hint == 'text':
-        ret_dict[name] = input(f"{var.get('description', name)}: ")
+        response = input(f"{var.get('description', name)} {default_str}: ")
+        if not len(response) and len(default):
+            ret_dict[name] = default
+        else:
+            ret_dict[name] = response
 
     elif type_hint == 'hidden':
         ret_dict[name] = var.get('default')

@@ -65,7 +65,7 @@ def require_single_skillet(func):
 
     def wrap(command):
         if not command.sli.options.get('name') and len(command.sli.skillets) > 1:
-            print(f'Specify a skillet to run with --name when more than 1 is present for command{command.sli_command}')
+            print(f'Specify a skillet to run with --name or -n when more than 1 is present for command {command.sli_command}')
             exit(1)
 
         target_name = command.sli.options.get('name') if command.sli.options.get('name') else command.sli.skillets[0].name
