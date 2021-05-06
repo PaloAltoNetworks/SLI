@@ -215,7 +215,9 @@ def get_variable_input(var, context):
     elif type_hint == 'ip_address':
         valid_response = False
         while not valid_response:
-            response = input(f"{var.get('description', name)} (ip): ")
+            response = input(f"{var.get('description', name)} {default_str}: ")
+            if not len(response):
+                response = default
             if is_ip(response):
                 valid_response = True
             else:
