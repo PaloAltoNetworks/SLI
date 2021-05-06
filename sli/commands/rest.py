@@ -20,6 +20,4 @@ class ValidateCommand(BaseCommand):
         Execute a REST skillet
         """
 
-        exe = self.sli.skillet.execute(self.sli.context)
-        from pprint import pprint as pp
-        pp(exe)
+        self.sli.skillet.execute(self.sli.context)

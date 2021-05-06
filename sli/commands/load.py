@@ -11,17 +11,20 @@ class LoadCommand(BaseCommand):
     sli_command = 'load'
     short_desc = 'Load and display all skillets of any type'
 
+    skillets = list()
+
     def run(self):
         """SLI action, test load all skillets in directory and print out loaded skillets"""
-        objs = []
         for s in self.sli.skillets:
             obj = {
                 'name': s.name,
                 'type': s.type,
             }
-            objs.append(obj)
+            self.skillets.append(obj)
+
+    def _get_output(self):
         print_table(
-            objs,
+            self.skillets,
             {
                 "Name": "name",
                 "Type": "type",

@@ -1,3 +1,4 @@
+from skilletlib import Skillet
 from skilletlib import SkilletLoader
 from inspect import isclass
 from sli import commands
@@ -6,7 +7,7 @@ from types import ModuleType
 from sli.contextManager import ContextManager
 
 
-class SkilletLineInterface():
+class SkilletLineInterface:
 
     def __init__(self, options, action, args):
         self.action = action
@@ -31,7 +32,7 @@ class SkilletLineInterface():
             self.context = self.cm.load_context()
         else:
             self.context = self.cm.load_environment()
-        self.skillet = None  # Active running skillet
+        self.skillet: Skillet = None  # Active running skillet
 
     def _unpack_options(self):
         """Unpack options onto self where required"""

@@ -68,11 +68,15 @@ class Capture(BaseCommand):
             print('Unable to execute command')
             return
 
-        # Print captured JSON
         output = exe['outputs']['capture_test']
-        print(json.dumps(output, indent=4))
 
         # Update context if using context
         if self.sli.cm.use_context and len(capture_var) > 1:
             self.sli.context[capture_var] = output
             print(f'Output added to context as {capture_var}')
+
+    def _get_output(self):
+        results = self.sli.skillet.get_results()
+        # Print captured JSON
+        output = results['outputs']['capture_test']
+        print(json.dumps(output, indent=4))

@@ -1,29 +1,12 @@
+from skilletlib.snippet.workflow import WorkflowSnippet
+
 from sli.decorators import load_variables
 from sli.decorators import require_ngfw_connection_params
 from sli.decorators import require_single_skillet
 from sli.decorators import require_skillet_type
+from sli.tools import get_var
+from sli.tools import render_expression
 from .base import BaseCommand
-
-from sli.tools import render_expression, get_var
-from skilletlib.snippet.workflow import WorkflowSnippet
-
-
-def should_execute(snippet, context):
-    """Determine if a workflow snippet should be exectued"""
-    if 'when' not in snippet:
-        return True
-    return render_expression(snippet['when'], context) == "True"
-
-
-def print_validation_output(exe):
-    """Print output for validation skillets after run"""
-    for output_name in exe["outputs"]:
-        output = exe["outputs"][output_name]
-        if not isinstance(output, dict):
-            continue
-        if "test" in output:
-            print(f"   Validation: {output_name}")
-            print(f"      Output: {output['output_message']}")
 
 
 class WorkflowCommand(BaseCommand):
@@ -40,7 +23,7 @@ class WorkflowCommand(BaseCommand):
         for snippet in self.sli.skillet.snippet_stack:
 
             # Verify if a snippet should be run
-            if not should_execute(snippet, self.sli.context):
+            if not self._should_execute(snippet, self.sli.context):
                 continue
 
             # Handle transform
@@ -65,6 +48,29 @@ class WorkflowCommand(BaseCommand):
 
             # Handle outputs
             if snippet_skillet.type == 'pan_validation':
-                print_validation_output(exe)
+                self._print_validation_output(exe)
             elif snippet_skillet.type == 'template':
                 print(snippet_skillet.get_results()['template'])
+            elif 'output_template' in exe:
+                print(exe['output_template'])
+
+    def _get_output(self):
+        pass
+
+    @staticmethod
+    def _should_execute(snippet, context):
+        """Determine if a workflow snippet should be executed"""
+        if 'when' not in snippet:
+            return True
+        return render_expression(snippet['when'], context) == "True"
+
+    @staticmethod
+    def _print_validation_output(exe):
+        """Print output for validation skillets after run"""
+        for output_name in exe["outputs"]:
+            output = exe["outputs"][output_name]
+            if not isinstance(output, dict):
+                continue
+            if "test" in output:
+                print(f"   Validation: {output_name}")
+                print(f"      Output: {output['output_message']}")

@@ -202,7 +202,7 @@ def get_variable_input(var, context):
         while not valid_response:
             default_key = ""
             if len(default):
-                default_dd = [x for x in var["dd_list"] if x['value'] == default]
+                default_dd = [x for x in dd_list if x['value'] == default]
                 if not len(default_dd):
                     # If there is a default from the context and it's not an option, clear the default
                     default = ""
@@ -216,8 +216,8 @@ def get_variable_input(var, context):
                 valid_response = True
             elif response.isdigit() and '.' not in response:
                 response_index = int(response) - 1
-                if response_index < 0 or response_index >= len(var['dd_list']):
-                    print(f"Please input a number between 1 and {len(var['dd_list'])}")
+                if response_index < 0 or response_index >= len(dd_list):
+                    print(f"Please input a number between 1 and {len(dd_list)}")
                 else:
                     value = dd_list[response_index]['value']
                     ret_dict[name] = value
@@ -275,6 +275,7 @@ def get_variable_input(var, context):
         ret_dict[name] = password
 
     elif type_hint == 'text':
+
         response = input(f"{var.get('description', name)} {default_str}: ")
         if not len(response) and len(default):
             ret_dict[name] = default
@@ -282,7 +283,14 @@ def get_variable_input(var, context):
             ret_dict[name] = response
 
     elif type_hint == 'hidden':
-        ret_dict[name] = var.get('default')
+        ret_dict[name] = default
+
+    elif type_hint == 'fqdn_or_ip':
+        response = input(f"{var.get('description', name)} {default_str}: ")
+        if not len(response) and len(default):
+            ret_dict[name] = default
+        else:
+            ret_dict[name] = response
 
     else:
         raise ValueError(f'Unsupported input variable type of {type_hint} in var {name}')

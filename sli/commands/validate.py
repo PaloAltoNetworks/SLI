@@ -27,8 +27,10 @@ class ValidateCommand(BaseCommand):
         Generate panforge report if requested
         """
 
-        exe = self.sli.skillet.execute(self.sli.context)
+        self.sli.skillet.execute(self.sli.context)
 
+    def _get_output(self):
+        exe = self.sli.skillet.get_results()
         if self.sli.verbose:
             self.print_verbose(exe)
         self.print_summary(exe)
@@ -41,7 +43,8 @@ class ValidateCommand(BaseCommand):
             report_dir = os.path.sep.join([self.sli.skillet.path, 'report'])
             generate_report(out_file, exe['pan_validation'], report_dir, header=header)
 
-    def print_verbose(self, exe):
+    @staticmethod
+    def print_verbose(exe):
         print('Validation details\n------------------')
         for snippet_name in exe['pan_validation']:
             snippet = exe['pan_validation'][snippet_name]
@@ -61,7 +64,8 @@ class ValidateCommand(BaseCommand):
                     print(f"      {key}: {snippet['meta'][key]}")
             print()
 
-    def print_summary(self, exe):
+    @staticmethod
+    def print_summary(exe):
         results = [
             {
                 'name': x,

@@ -124,3 +124,6 @@ class OpCommand(BaseCommand):
         if self.sli.cm.use_context and len(capture_var) > 1:
             self.sli.context[capture_var] = output
             print(f"Output added to context as {capture_var}")
+
+    def _get_output(self):
+        pass
