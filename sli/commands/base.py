@@ -8,6 +8,12 @@ class BaseCommand():
         """SLI starts here to call the run function"""
         self.run()
 
+    def execute_debug(self):
+        if hasattr(self, 'debug'):
+            self.debug()
+        else:
+            print(f"Module {self.sli_command} doesn't have a debug function")
+
     def run(self):
         """ Should be overridden by child classes"""
         raise Exception(f"The SLI module {self.sli_command} has not properly overridden the run function")

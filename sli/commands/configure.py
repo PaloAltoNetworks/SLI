@@ -14,23 +14,20 @@ class ConfigureCommand(BaseCommand):
     short_desc = 'Execute a configuration skillet of type panos'
     help_text = """
     Executes a PAN-OS configuration skillet.
-    
+
     Example: Load and commit and configuration skillet
         sli configure --name test_skillet -sd ~/pan/Skillets -uc
-        
+
     Example: Verify the actions of a configuration skillet ONLY
-        sli configure debug --name test_skillet -sd ~/pan/Skillets -uc 
-    
-    """
+        sli configure --debug --name test_skillet -sd ~/pan/Skillets -uc
+
+"""
 
     @require_single_skillet
     @require_skillet_type('panos')
     @require_ngfw_connection_params
     @load_variables
     def run(self):
-
-        if 'debug' in self.args:
-            return self.debug()
 
         self.sli.skillet.execute(self.sli.context)
         if self.sli.commit:
@@ -40,6 +37,10 @@ class ConfigureCommand(BaseCommand):
         else:
             print('Configuration loaded into candidate config')
 
+    @require_single_skillet
+    @require_skillet_type('panos')
+    @require_ngfw_connection_params
+    @load_variables
     def debug(self):
         """
         Debug this configuration skillet, this will not perform any destructive actions against the device, but
@@ -67,7 +68,6 @@ class ConfigureCommand(BaseCommand):
                 else:
                     changes[snippet.name] = change
 
-                # change['metadata'] = snippet.metadata
                 change['metadata'] = json.dumps(snippet.metadata, indent=4)
                 change['when'] = True
 
@@ -93,7 +93,6 @@ class ConfigureCommand(BaseCommand):
                         skillet_context.update(captured_outputs)
 
                         change['message'] = 'This snippet was executed to gather results'
-                        # change['captured_output'] = captured_outputs
                         change['captured_output'] = json.dumps(captured_outputs, indent=4)
 
                     except PanoplyException as pe:
@@ -107,7 +106,14 @@ class ConfigureCommand(BaseCommand):
             print(f"Snippet: {k}")
             if isinstance(v, dict):
                 for kk, vv in v.items():
-                    print(f"{kk}: {vv}")
+                    try:
+                        j = json.loads(vv)
+                        print("{")
+                        for jk, jv in j.items():
+                            print(f"   {jk}: {jv}")
+                        print("}")
+                    except (TypeError, json.decoder.JSONDecodeError):
+                        print(f"{kk}: {vv}")
 
                 print("***\n")
             else:
