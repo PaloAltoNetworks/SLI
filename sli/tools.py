@@ -198,9 +198,19 @@ def get_variable_input(var, context):
 
     elif type_hint == 'list':
         valid_response = False
+        if isinstance(default, list):
+            if len(default):
+                print("\nDefault list")
+                for item in default:
+                    print(f"  - {item}")
         while not valid_response:
-            response = input(f"{desc} (comma seperated list): ")
-            rl = [x.strip() for x in response.split(',') if len(x)]
+            response = input(f"{desc} (comma seperated list, blank to accept default): ")
+            if len(response):
+                rl = [x.strip() for x in response.split(',') if len(x)]
+            else:
+                rl = default
+                valid_response = True
+                continue
             print("You entered:")
             if len(rl):
                 for item in rl:
