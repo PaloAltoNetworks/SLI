@@ -281,7 +281,7 @@ def get_variable_input(var, context):
         else:
             ret_dict[name] = response
 
-    elif type_hint == 'hidden':
+    elif type_hint == 'hidden' or type_hint == 'disabled':
         ret_dict[name] = var.get('default')
 
     else:
