@@ -29,6 +29,7 @@ class ConfigureCommand(BaseCommand):
     @load_variables
     def run(self):
 
+        print(f"Executing {self.sli.skillet.name}...")
         self.sli.skillet.execute(self.sli.context)
         if self.sli.commit:
             print('Committing configuration...')
@@ -46,6 +47,7 @@ class ConfigureCommand(BaseCommand):
         Debug this configuration skillet, this will not perform any destructive actions against the device, but
         will perform op commands and the like to gather information
         """
+        print(f"Running {self.sli.skillet.name} debug...")
         skillet_context = self.sli.skillet.initialize_context(self.sli.context)
         changes = dict()
 

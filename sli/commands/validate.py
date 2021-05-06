@@ -27,6 +27,7 @@ class ValidateCommand(BaseCommand):
         Generate panforge report if requested
         """
 
+        print(f"Executing {self.sli.skillet.name}...")
         self.sli.skillet.execute(self.sli.context)
 
     def _get_output(self):

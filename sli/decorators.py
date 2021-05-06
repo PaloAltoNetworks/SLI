@@ -56,6 +56,8 @@ def load_variables(func):
     def wrap(command):
         for var in command.sli.skillet.variables:
             get_var(var, command.args, command.sli.context)
+        if len(command.sli.skillet.variables):
+            print("End of user variables.")
         return func(command)
     return wrap
 
