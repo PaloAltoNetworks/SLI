@@ -104,7 +104,10 @@ class SkilletLineInterface:
         """Run supplied SLI command"""
 
         action_obj = self.command_map[self.action](self)
-        action_obj.execute()
+        if self.options.get("debug"):
+            action_obj.execute_debug()
+        else:
+            action_obj.execute()
 
         # Update context with new keys from skillet run
         if not self.no_context:

@@ -43,6 +43,7 @@ class FormatHelp(click.Command):
 @click.option("-cm", "--commit", is_flag=True, help="Commit configuration changes")
 @click.option("-v", "--verbose", is_flag=True, help="Verbose output")
 @click.option("-d", "--device", help="Device IP or hostname")
+@click.option("-db", "--debug", is_flag=True, help="Run a command in debug mode")
 @click.option("-le", "--loader-error", is_flag=True, help="Fail on SkilletLoader errors")
 @click.option("-sd", "--directory", help="Directory to load skillets from", default="./")
 @click.option("-u", "--username", help="Device username")
