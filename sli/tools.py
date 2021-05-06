@@ -119,6 +119,16 @@ def input_yes_no(prompt, ret_value, ret_false=None, default=None):
         print('Please input either y or n')
 
 
+def check_default_empty(default):
+    """Helper function to validate if a default parameter is empty based on type"""
+    if isinstance(default, str) or isinstance(default, list):
+        return len(default) == 0
+    elif isinstance(default, int):
+        return False
+    elif isinstance(default, dict):
+        return len(default.keys()) == 0
+
+
 def get_variable_input(var, context):
     """
     Get input from user in reference to var, being a skillet variable object
@@ -129,10 +139,13 @@ def get_variable_input(var, context):
 
     # First get a default from the context, otherwise use the skillet definition
     default = context.get(name, "")
-    if not len(default):
-        default = var.get("default", "")
+    default_is_empty = check_default_empty(default)
 
-    default_str = f"({default})" if len(default) else ""
+    if default_is_empty:
+        default = var.get("default", "")
+        default_is_empty = check_default_empty(default)
+
+    default_str = f"({default})" if not default_is_empty else ""
     if not name:
         raise ValueError('Input variable missing name')
 
@@ -201,7 +214,7 @@ def get_variable_input(var, context):
         valid_response = False
         while not valid_response:
             default_key = ""
-            if len(default):
+            if not default_is_empty:
                 default_dd = [x for x in dd_list if x['value'] == default]
                 if not len(default_dd):
                     # If there is a default from the context and it's not an option, clear the default
@@ -210,7 +223,7 @@ def get_variable_input(var, context):
                     default_dd = default_dd[0]
                     default_key = f"({default_dd['key']})"
             response = input(f"Please enter line number of selection {default_key}: ")
-            if not len(response) and len(default):
+            if not len(response) and not default_is_empty:
                 # Assume default
                 response = default_dd["value"]
                 valid_response = True
@@ -228,7 +241,7 @@ def get_variable_input(var, context):
     elif type_hint == 'list':
         valid_response = False
         if isinstance(default, list):
-            if len(default):
+            if not default_is_empty:
                 print("\nDefault list")
                 for item in default:
                     print(f"  - {item}")
@@ -277,7 +290,7 @@ def get_variable_input(var, context):
     elif type_hint == 'text':
 
         response = input(f"{var.get('description', name)} {default_str}: ")
-        if not len(response) and len(default):
+        if not len(response) and not default_is_empty:
             ret_dict[name] = default
         else:
             ret_dict[name] = response
@@ -287,7 +300,7 @@ def get_variable_input(var, context):
 
     elif type_hint == 'fqdn_or_ip':
         response = input(f"{var.get('description', name)} {default_str}: ")
-        if not len(response) and len(default):
+        if not len(response) and not default_is_empty:
             ret_dict[name] = default
         else:
             ret_dict[name] = response
