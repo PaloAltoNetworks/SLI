@@ -196,7 +196,7 @@ def get_variable_input(var, context):
             dd_list = var.get('dd_list', [])
 
         for i in range(0, len(dd_list)):
-            print(f"   {i + 1}. {dd_list[i-1]['key']}")
+            print(f"   {i + 1}. {dd_list[i]['key']}")
 
         valid_response = False
         while not valid_response:
