@@ -99,13 +99,19 @@ def generate_report(out_file, data, report_dir, header=None):
     print(f'Report written to {out_file}')
 
 
-def input_yes_no(prompt, ret_value, ret_false=None):
+def input_yes_no(prompt, ret_value, ret_false=None, default=None):
     """
     Simple wrapper for asking user yes no questions until an acceptable answer
     is received, returns ret_value if yes, ret_false if no
     """
+    default_str = " (y/n): "
+    if isinstance(default, str):
+        default_yes = True if default.lower() in ("y", "yes") else False
+        default_str = f" (y/n default: {'yes' if default_yes else 'no'}): "
     while True:
-        user_input = input(prompt + ' (y/n): ')
+        user_input = input(prompt + default_str)
+        if not len(user_input) and default is not None:
+            return ret_value if default_yes else ret_false
         if user_input.lower() in ('y', 'yes'):
             return ret_value
         if user_input.lower() in ('n', 'no'):
@@ -146,7 +152,10 @@ def get_variable_input(var, context):
         while not confirmed:
             input_list.clear()
             for cbx in cbx_list:
-                input_value = input_yes_no(cbx['key'], cbx['value'])
+                default_result = None
+                if isinstance(default, list):
+                    default_result = "y" if cbx["value"] in default else "n"
+                input_value = input_yes_no(cbx['key'], cbx['value'], default=default_result)
                 if input_value:
                     input_list.append(input_value)
 
