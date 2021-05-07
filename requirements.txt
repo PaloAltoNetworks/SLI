@@ -4,3 +4,4 @@ panforge
 jmespath
 pycryptodome
 jinja2-ansible-filters
+paramiko
