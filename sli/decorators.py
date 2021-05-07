@@ -2,6 +2,7 @@ from getpass import getpass
 from skilletlib.panoply import Panoply
 from skilletlib.exceptions import TargetConnectionException
 from sli.tools import get_var
+from sli.ssh import SSHSession
 
 
 def require_ngfw_connection_params(func):
@@ -42,11 +43,24 @@ def require_panoply_connection(func):
         pan = Panoply(
             command.sli.context['TARGET_IP'],
             command.sli.context['TARGET_USERNAME'],
-            command.sli.context['TARGET_PASSWORD'],
+            command.sli.context['TARGET_PASSWORD']
         )
         if not pan.connected:
             raise TargetConnectionException('Unable to connect to device')
         return func(command, pan)
+    return wrap
+
+
+def require_ngfw_ssh_session(func):
+    def wrap(command):
+        print(f"Connecting to {command.sli.context['TARGET_IP']}...")
+        ssh = SSHSession(
+            command.sli.context['TARGET_IP'],
+            username=command.sli.context['TARGET_USERNAME'],
+            password=command.sli.context['TARGET_PASSWORD']
+        )
+        print("Connected.")
+        return func(command, ssh)
     return wrap
 
 
