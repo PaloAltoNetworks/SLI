@@ -53,11 +53,13 @@ def require_panoply_connection(func):
 
 def require_ngfw_ssh_session(func):
     def wrap(command):
+        print(f"Connecting to {command.sli.context['TARGET_IP']}...")
         ssh = SSHSession(
             command.sli.context['TARGET_IP'],
             username=command.sli.context['TARGET_USERNAME'],
             password=command.sli.context['TARGET_PASSWORD']
         )
+        print("Connected.")
         return func(command, ssh)
     return wrap
 

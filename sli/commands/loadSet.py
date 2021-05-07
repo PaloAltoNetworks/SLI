@@ -1,5 +1,6 @@
 from .base import BaseCommand
 from sli.decorators import require_ngfw_connection_params, require_ngfw_ssh_session
+from sli.progressBar import ProgressBar
 
 
 class LoadSet(BaseCommand):
@@ -36,11 +37,19 @@ class LoadSet(BaseCommand):
 
         # Execute line by line until end of script
         print("Starting set command load...")
+        total = len(commands)
         ssh.config_mode()
+        i = 0
+        pb = ProgressBar(prefix="Applying commands")
         for command in commands:
             if not ssh.set_command(command):
                 print(ssh.get_error_text())
                 print("Errors occurred while loading set commands.")
                 return
+            i += 1
+            percent = "{0:.1f}".format(100 * (i / total))
+            pb.update(percent)
+
+        pb.complete()
 
         print('Set commands successfully loaded')
