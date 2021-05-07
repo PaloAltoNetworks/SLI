@@ -61,6 +61,7 @@ class Capture(BaseCommand):
         skillet_dict = yaml.safe_load(skillet_yaml)
         sl = SkilletLoader()
         skillet = sl.create_skillet(skillet_dict)
+        self.sli.skillet = skillet
 
         # Execute skillet and extract values from target
         exe = skillet.execute(self.sli.context)
@@ -78,5 +79,6 @@ class Capture(BaseCommand):
     def _get_output(self):
         results = self.sli.skillet.get_results()
         # Print captured JSON
-        output = results['outputs']['capture_test']
-        print(json.dumps(output, indent=4))
+        output = results['outputs']
+        if 'capture_test' in output:
+            print(json.dumps(output['capture_test'], indent=4))
