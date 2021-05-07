@@ -11,8 +11,11 @@ class LoadSet(BaseCommand):
         Load set commands into an NGFW from a specified file.
         fails out on any set command errors
 
-        Example Usage:
+        Example usage with progress bar and timer:
             sli load_set -uc set_commands.txt
+
+        Example usage printing out commands as they are processed:
+            sli load_set -uc set_commands.txt -v
 """
 
     @require_ngfw_connection_params
@@ -40,16 +43,21 @@ class LoadSet(BaseCommand):
         total = len(commands)
         ssh.config_mode()
         i = 0
-        pb = ProgressBar(prefix="Applying commands")
+        if not self.sli.verbose:
+            pb = ProgressBar(prefix="Applying commands")
         for command in commands:
             if not ssh.set_command(command):
-                print(ssh.get_error_text())
+                print('\n' + ssh.get_error_text())
                 print("Errors occurred while loading set commands.")
                 return
             i += 1
             percent = "{0:.1f}".format(100 * (i / total))
-            pb.update(percent)
+            if self.sli.verbose:
+                print(command)
+            else:
+                pb.update(percent)
 
-        pb.complete()
+        if not self.sli.verbose:
+            pb.complete()
 
         print('Set commands successfully loaded')
