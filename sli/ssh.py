@@ -24,7 +24,11 @@ class SSHSession:
         self.client = paramiko.client.SSHClient()
         self.client.load_system_host_keys()
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.client.connect("172.31.213.10", username='admin', password='Paloalto1!')
+        self.client.connect(
+            self.device,
+            username=self.username,
+            password=self.password
+        )
         self.channel = self.client.invoke_shell()
 
     def _get_prompt(self):
