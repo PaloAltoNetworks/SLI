@@ -24,6 +24,7 @@ setuptools.setup(
         'panforge',
         'click',
         'pycryptodome',
+        'paramiko',
     ],
     entry_points={
         'console_scripts': [
