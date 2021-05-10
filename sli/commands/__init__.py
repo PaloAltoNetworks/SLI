@@ -4,6 +4,10 @@ from pkgutil import iter_modules
 from inspect import isclass
 from importlib import import_module
 
+# Disable SSL warning
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 # Load all command modules from this package
 
 package_dir = Path(__file__).resolve().parent

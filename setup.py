@@ -25,6 +25,7 @@ setuptools.setup(
         'click',
         'pycryptodome',
         'paramiko',
+        'requests',
     ],
     entry_points={
         'console_scripts': [
