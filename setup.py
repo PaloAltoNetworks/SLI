@@ -8,7 +8,7 @@ setuptools.setup(
     version="##_VERSION_##",
     author="Andrew Mallory",
     author_email="amallory@paloaltonetworks.com",
-    description="Document generation library",
+    description="A tool for working with Palo Alto Networks skillets",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://paloaltonetworks.com",
