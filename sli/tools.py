@@ -7,7 +7,7 @@ from jinja2 import Environment
 import jmespath
 
 
-def get_var(var, args, context):
+def get_var(var, args, context, options={}):
     """Get a var by searching args and the context, else ask the user"""
     args = {x.split('=')[0]: x.split('=')[1] for x in args if '=' in x}
     if var['name'] in args:
@@ -15,7 +15,7 @@ def get_var(var, args, context):
         context[var['name']] = args[var['name']]
     else:
         # If input has not yet been supplied, get it from the user
-        context.update(get_variable_input(var, context))
+        context.update(get_variable_input(var, context, defaults=options.get("defaults", False)))
 
 
 def render_template(template_text, context):
@@ -129,7 +129,7 @@ def check_default_empty(default):
         return len(default.keys()) == 0
 
 
-def get_variable_input(var, context):
+def get_variable_input(var, context, defaults=False):
     """
     Get input from user in reference to var, being a skillet variable object
     """
@@ -144,6 +144,9 @@ def get_variable_input(var, context):
     if default_is_empty:
         default = var.get("default", "")
         default_is_empty = check_default_empty(default)
+
+    if defaults and not default_is_empty:
+        return {name: default}
 
     default_str = f"({default})" if not default_is_empty else ""
     if not name:

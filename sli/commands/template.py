@@ -44,4 +44,5 @@ class TemplateCommand(BaseCommand):
             out_path = os.path.sep.join([out_directory, snippet.file]) if len(out_directory) else snippet.file
             with open(out_path, 'w') as f:
                 f.write(rendered)
-            breakpoint()
+
+        print(f"Template written to {out_path}")

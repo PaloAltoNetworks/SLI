@@ -63,6 +63,7 @@ class FormatHelp(click.Command):
 @click.option("-of", "--output-format", help="Output format, xml or set",
               type=click.Choice(["xml", "set"]), default="xml"
               )
+@click.option("-ad", "--defaults", is_flag=True, help="Assume all default inputs, useful for development")
 @click.argument("action", nargs=1, default="execute")
 @click.pass_context
 def cli(ctx, action, **kwargs):
