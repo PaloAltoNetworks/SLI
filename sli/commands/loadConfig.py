@@ -51,7 +51,6 @@ class LoadConfig(BaseCommand):
 
         # Configuration file is on device, load it as candidate config
         file_name = file_name.replace('/', os.path.sep).split(os.path.sep)[-1]
-        file_name = "after.xml"
         xml = f"<load><config><from>{file_name}</from></config></load>"
         r = pan.execute_op(xml)
         xml = etree.fromstring(r)
