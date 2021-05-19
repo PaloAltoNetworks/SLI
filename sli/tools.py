@@ -331,7 +331,7 @@ def merge_children(config, xml):
     Recursively searches children for any 'entry' style lists and
     merges accordingly, items with no lists are simply replaced.
     """
-    print(f"*** MERGING Children  {config.tag} {xml.tag}***")
+    print(f"Merging children into {config.tag} from {xml.tag}***")
 
     # All nodes from new XML document
     for xml_child in xml.getchildren():

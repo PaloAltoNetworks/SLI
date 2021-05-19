@@ -51,11 +51,9 @@ class PreviewCommand(BaseCommand):
         write_xml(config, "C:/users/amall/Desktop/config.xml")
         snippets = self.sli.skillet.get_snippets()
         for snippet in snippets:
-            # if not snippet.name == "device_setting":
-            #     continue
+
             if not snippet.should_execute(self.sli.context):
                 continue
-
             xpath = snippet.metadata.get('xpath')
             meta = snippet.render_metadata(self.sli.context)
             element = meta.get('element')
@@ -70,15 +68,32 @@ class PreviewCommand(BaseCommand):
 
             # If no node was found, generate missing XML elements from xpath
             elif len(found) == 0:
-                # breakpoint()
-                parent_xpath = "/".join(xpath.split("/")[:-1])
-                print(f"   Parent XPATH - {parent_xpath}")
-                parent_node = config.xpath(parent_xpath)
-                if not len(parent_node):
-                    raise Exception(f"Unable to find parent node for {xpath}")
+                i = 1
+
+                # Find the first level of matching elements
+                xpath_elements = xpath.split("/")
+                common_xpath = ""
+                cursor_element = None
+                while i < len(xpath_elements) - 1:
+                    common_xpath = "/".join(xpath_elements[:-1 * i])
+                    cursor_element = config.xpath(common_xpath)
+                    if len(cursor_element) == 1:
+                        cursor_element = cursor_element[0]
+                        break
+                    elif len(cursor_element) > 1:
+                        raise Exception(f"First level of matching xml in xpath {xpath} produced {len(cursor_element)} nodes at {common_xpath}")
+                    i += 1
+
+                # Create the missing gap of XML elements and place new elements inside
+                missing_elements = [x for x in xpath.replace(common_xpath, "").split("/") if x]
+                for element in missing_elements:
+                    new_element = etree.Element(element)
+                    cursor_element.append(new_element)
+                    cursor_element = new_element
+                for child in child_xml.getchildren():
+                    cursor_element.append(child)
 
             else:
                 raise Exception("Skillet xpath returned multiple results on device, cannot merge.")
 
         write_xml(config, "C:/users/amall/Desktop/test.xml")
-
