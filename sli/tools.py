@@ -6,6 +6,7 @@ import socket
 from jinja2 import Environment
 import jmespath
 import lxml
+from lxml import etree
 
 
 def pretty_print_xml(xml):
@@ -331,7 +332,7 @@ def merge_children(config, xml):
     Recursively searches children for any 'entry' style lists and
     merges accordingly, items with no lists are simply replaced.
     """
-    print(f"Merging children into {config.tag} from {xml.tag}***")
+    print(f"Merging children into {config.tag} from {xml.tag}")
 
     # All nodes from new XML document
     for xml_child in xml.getchildren():
@@ -365,3 +366,62 @@ def merge_children(config, xml):
         else:
             config.append(xml_child)
             print(f"   Added node {xml_child.tag} due to missing config node")
+
+
+def merge_into_parent(xpath, config, child_xml):
+    """
+    Merge a new xml config structure child_xml into config starting
+    at xpath. If xpath does not exist, walk back the path until we
+    find a common element, and generate the missing structure
+    """
+
+    # Find the first level of matching elements
+    print(f"Merging new config node {child_xml.tag} into missing parent")
+    xpath_elements = xpath.split("/")
+    common_xpath = ""
+    cursor_element = None
+    i = 1
+    while i < len(xpath_elements) - 1:
+        common_xpath = "/".join(xpath_elements[:-1 * i])
+        cursor_element = config.xpath(common_xpath)
+        if len(cursor_element) == 1:
+            cursor_element = cursor_element[0]
+            break
+        elif len(cursor_element) > 1:
+            raise Exception(f"First level of matching xml in xpath {xpath} produced {len(cursor_element)} nodes at {common_xpath}")
+        i += 1
+    if not len(common_xpath):
+        raise Exception(f"Unable to find a common level of elements for {xpath}")
+    print(f"   Found common element at {cursor_element.getroottree().getpath(cursor_element)}")
+
+    # Create the missing gap of XML elements and place new elements inside
+    missing_elements = [x for x in xpath.replace(common_xpath, "").split("/") if x]
+    for element in missing_elements:
+        new_element = etree.Element(element)
+        cursor_element.append(new_element)
+        cursor_element = new_element
+        print(f"   Added missing element {cursor_element.tag} to cursor")
+    for child in child_xml.getchildren():
+        cursor_element.append(child)
+        print(f"   Added config element {child.tag} to {cursor_element.tag}")
+
+
+def merge_xml_into_config(xpath, config, child_xml):
+    """
+    Merge an xml config structure child_xml into config starting at
+    the element returned with xpath, which must either specify a unique
+    element, or an element that has not yet been created
+    """
+    found = config.xpath(xpath)
+
+    # If an equivelant xpath was found, merge the children
+    if len(found) == 1:
+        found = found[0]
+        merge_children(found, child_xml)
+
+    # If no node was found, generate missing XML elements from xpath
+    elif len(found) == 0:
+        merge_into_parent(xpath, config, child_xml)
+
+    else:
+        raise Exception("Skillet xpath returned multiple results on device, cannot merge.")
