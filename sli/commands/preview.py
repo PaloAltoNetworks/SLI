@@ -48,9 +48,11 @@ class PreviewCommand(BaseCommand):
         #     out_directory = ""
 
         config = etree.fromstring(pan.get_configuration())
-        write_xml(config, "C:/users/amallory/Desktop/config.xml")
+        write_xml(config, "C:/users/amall/Desktop/config.xml")
         snippets = self.sli.skillet.get_snippets()
         for snippet in snippets:
+            # if not snippet.name == "device_setting":
+            #     continue
             if not snippet.should_execute(self.sli.context):
                 continue
 
@@ -59,51 +61,60 @@ class PreviewCommand(BaseCommand):
             element = meta.get('element')
             child_tag = xpath.split('/')[-1:][0]
             child_xml = etree.fromstring(f"<{child_tag}>{element}</{child_tag}>")
-
             found = config.xpath(xpath)
-            print(f"{xpath}   [{len(found)}]")
+
+            # If an equivelant xpath was found, merge the children
             if len(found) == 1:
                 found = found[0]
-                if len(found.xpath("//entry")) > 0 or len(child_xml.xpath("//entry")) > 0:
-                    print("   Has entry children")
-                    merge_children(found, child_xml)
-        write_xml(config, "C:/users/amallory/Desktop/test.xml")
+                merge_children(found, child_xml)
+
+            # If no node was found, generate missing XML elements from xpath
+            elif len(found) == 0:
+                # breakpoint()
+                parent_xpath = "/".join(xpath.split("/")[:-1])
+                print(f"   Parent XPATH - {parent_xpath}")
+                parent_node = config.xpath(parent_xpath)
+                if not len(parent_node):
+                    raise Exception(f"Unable to find parent node for {xpath}")
+
+            else:
+                raise Exception("Skillet xpath returned multiple results on device, cannot merge.")
+
+        write_xml(config, "C:/users/amall/Desktop/test.xml")
 
 
 def merge_children(config, xml):
-    """Config refers to what we are merging into, XML is what we are trying to merge"""
     print(f"*** MERGING Children  {config.tag} {xml.tag}***")
 
-    # Iterate over children in new XML
+    # All nodes from new XML document
     for xml_child in xml.getchildren():
-        # print(f"Checking {xml_child.tag} against {config.tag}")
 
-        # Check if a child entry has an identical element already in config
+        # Check if child node has a matching config node
         config_node = config.xpath(xml_child.tag)
         if len(config_node):
+            config_node = config_node[0]
 
-            # Since these overlap, check if they are list items that have "entry" tags
-            xml_entries = [x for x in xml_child.getchildren() if x.tag == "entry"]
-            if len(xml_entries):
+            # Node has entry children somewhere
+            if xml_child.xpath(".//entry[@name]"):
 
-                # Since we found entries, we should copy just the entries to the config XML
-                # print(f"   Found entries!! {[x.tag for x in xml_entries]}")
-                for x in xml_entries:
-                    config_node[0].append(x)
-                    print(f"Copied entry {x.xpath('@name')[0]} into {config_node[0].tag}")
-                    # print(pretty_print_xml(x))
-            else:
-                # Without an entry tag, we should traverse deeper if there is still an entry tag
-                if len(xml_child.xpath("//entry")) or len(config_node[0].xpath("//entry")):
-                    # print(f"   recursing on {config_node[0].tag} and {xml_child.tag}")
-                    merge_children(config_node[0], xml_child)
+                # Node has entry immediate children
+                if len(xml_child.xpath("./entry[@name]")):
+                    for entry_child in xml_child.getchildren():
+                        config_node.append(entry_child)
+                        print(f"   Appended child {entry_child.tag} {entry_child.get('name')} to {config_node.tag}")
 
+                # Node has entry children, but not immediately
                 else:
-                    # Without a deeper entry tag, we can simply replace
-                    config.remove(config_node[0])
-                    config.append(xml_child)
-                    print(f"   Replace node {config_node[0].tag} with {xml_child.tag} due to no entries")
+                    print(f" Recursing over {xml_child.tag}")
+                    merge_children(config_node, xml_child)
+
+            # This node has no entry children
+            else:
+                config.remove(config_node)
+                config_node.append(xml_child)
+                print(f"   Replaced node {xml_child.tag} as no entry children were found")
+
+        # Child node does not have a matching config node
         else:
-            # Did not find an overlapping config node, add new node to parent
             config.append(xml_child)
-            print(f"   Added node {xml_child.tag} due to missing config node {config.tag}")
+            print(f"   Added node {xml_child.tag} due to missing config node")
