@@ -323,3 +323,45 @@ def get_variable_input(var, context, defaults=False):
 def expandedHomePath(directory):
     """Returns a local OS formatted directory string"""
     return expanduser("~") + os.path.sep + os.path.sep.join(directory.strip().split('/'))
+
+
+def merge_children(config, xml):
+    """
+    Merge a child xml object into an existing xml config object.
+    Recursively searches children for any 'entry' style lists and
+    merges accordingly, items with no lists are simply replaced.
+    """
+    print(f"*** MERGING Children  {config.tag} {xml.tag}***")
+
+    # All nodes from new XML document
+    for xml_child in xml.getchildren():
+
+        # Check if child node has a matching config node
+        config_node = config.xpath(xml_child.tag)
+        if len(config_node):
+            config_node = config_node[0]
+
+            # Node has entry children somewhere
+            if xml_child.xpath(".//entry[@name]"):
+
+                # Node has entry immediate children
+                if len(xml_child.xpath("./entry[@name]")):
+                    for entry_child in xml_child.getchildren():
+                        config_node.append(entry_child)
+                        print(f"   Appended child {entry_child.tag} {entry_child.get('name')} to {config_node.tag}")
+
+                # Node has entry children, but not immediately
+                else:
+                    print(f" Recursing over {xml_child.tag}")
+                    merge_children(config_node, xml_child)
+
+            # This node has no entry children
+            else:
+                config.remove(config_node)
+                config_node.append(xml_child)
+                print(f"   Replaced node {xml_child.tag} as no entry children were found")
+
+        # Child node does not have a matching config node
+        else:
+            config.append(xml_child)
+            print(f"   Added node {xml_child.tag} due to missing config node")
