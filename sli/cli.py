@@ -45,6 +45,7 @@ class FormatHelp(click.Command):
     )
 @click.option("-e", "--environment", help="Environment file")
 @click.option("-cm", "--commit", is_flag=True, help="Commit configuration changes")
+@click.option("-cf", "--config-file", help="Input configuration file")
 @click.option("-v", "--verbose", is_flag=True, help="Verbose output")
 @click.option("-d", "--device", help="Device IP or hostname")
 @click.option("-db", "--debug", is_flag=True, help="Run a command in debug mode")

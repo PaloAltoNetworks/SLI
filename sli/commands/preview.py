@@ -1,8 +1,7 @@
 from sli.decorators import load_variables
 from sli.decorators import require_single_skillet
 from sli.decorators import require_skillet_type
-from sli.decorators import require_ngfw_connection_params
-from sli.decorators import require_panoply_connection
+from sli.decorators import require_config
 from .base import BaseCommand
 from sli.tools import merge_xml_into_config
 
@@ -28,13 +27,10 @@ class PreviewCommand(BaseCommand):
     @require_single_skillet
     @require_skillet_type('panos')
     @load_variables
-    @require_ngfw_connection_params
-    @require_panoply_connection
-    def run(self, pan):
+    @require_config
+    def run(self, config):
 
         out_file = self.sli.options.get("out_file", "out.xml")
-        parser = etree.XMLParser(remove_blank_text=True)
-        config = etree.fromstring(pan.get_configuration(), parser)
         snippets = self.sli.skillet.get_snippets()
         for snippet in snippets:
 
@@ -47,4 +43,4 @@ class PreviewCommand(BaseCommand):
             child_xml = etree.fromstring(f"<{child_tag}>{element}</{child_tag}>")
             merge_xml_into_config(xpath, config, child_xml)
 
-        config.getroottree().write(out_file, encoding='utf-8', pretty_print=True, xml_declaration=True)
+        config.write(out_file, encoding='utf-8', pretty_print=True, xml_declaration=True)
