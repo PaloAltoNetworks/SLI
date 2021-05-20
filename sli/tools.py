@@ -352,6 +352,13 @@ def merge_children(config, xml):
 
             # This node has no entry children
             else:
+
+                # Target node has entry children, don't overwrite
+                if len(config_node.xpath(".//entry[@name]")):
+                    print(f"Ignoring empty node {xml_child.tag} as config has entry children")
+                    continue
+
+                # Both source and target have no entry children, replace the node
                 config.remove(config_node)
                 config_node.append(xml_child)
                 print(f"   Replaced node {xml_child.tag} as no entry children were found")
