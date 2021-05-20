@@ -51,6 +51,7 @@ class FormatHelp(click.Command):
 @click.option("-le", "--loader-error", is_flag=True, help="Fail on SkilletLoader errors")
 @click.option("-sd", "--directory", help="Directory to load skillets from", default="./")
 @click.option("-u", "--username", help="Device username")
+@click.option("-o", "--out-file", help="Output file")
 @click.option("-p", "--password", help="Device password")
 @click.option("-n", "--name", help="Name of skillet to execute")
 @click.option("-r", "--report", is_flag=True, help="Generate a panforge formatted report")

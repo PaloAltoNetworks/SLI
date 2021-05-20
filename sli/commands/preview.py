@@ -4,20 +4,13 @@ from sli.decorators import require_skillet_type
 from sli.decorators import require_ngfw_connection_params
 from sli.decorators import require_panoply_connection
 from .base import BaseCommand
-from sli.tools import pretty_print_xml, merge_xml_into_config
+from sli.tools import merge_xml_into_config
 
 from lxml import etree
 
 """
 Generate output of a panos skillet and write to file
 """
-
-
-# TODO: DELETE ME!!!
-def write_xml(xml, name):
-    with open(name, 'w') as f:
-        for line in pretty_print_xml(xml):
-            f.write(line)
 
 
 class PreviewCommand(BaseCommand):
@@ -29,7 +22,7 @@ class PreviewCommand(BaseCommand):
         disk in a specified directory as opposed to configuring NGFW
 
         Usage:
-            sli preview -n configuration_skillet out_directory
+            sli preview -n configuration_skillet -o output_file.xml
 """
 
     @require_single_skillet
@@ -38,16 +31,10 @@ class PreviewCommand(BaseCommand):
     @require_ngfw_connection_params
     @require_panoply_connection
     def run(self, pan):
-        if len(self.args) > 1:
-            print(self.help_text)
-            return
-        # elif len(self.args) == 1:
-        #     out_directory = self.args[0]
-        # else:
-        #     out_directory = ""
 
-        config = etree.fromstring(pan.get_configuration())
-        write_xml(config, "C:/users/amall/Desktop/config.xml")
+        out_file = self.sli.options.get("out_file", "out.xml")
+        parser = etree.XMLParser(remove_blank_text=True)
+        config = etree.fromstring(pan.get_configuration(), parser)
         snippets = self.sli.skillet.get_snippets()
         for snippet in snippets:
 
@@ -56,8 +43,8 @@ class PreviewCommand(BaseCommand):
             xpath = snippet.metadata.get('xpath')
             meta = snippet.render_metadata(self.sli.context)
             element = meta.get('element')
-            child_tag = xpath.split('/')[-1:][0]
+            child_tag = xpath.split('/')[-1]
             child_xml = etree.fromstring(f"<{child_tag}>{element}</{child_tag}>")
             merge_xml_into_config(xpath, config, child_xml)
 
-        write_xml(config, "C:/users/amall/Desktop/test.xml")
+        config.getroottree().write(out_file, encoding='utf-8', pretty_print=True, xml_declaration=True)

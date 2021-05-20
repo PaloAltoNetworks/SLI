@@ -5,13 +5,7 @@ from getpass import getpass
 import socket
 from jinja2 import Environment
 import jmespath
-import lxml
 from lxml import etree
-
-
-def pretty_print_xml(xml):
-    """Return a pretty print string representation of an XML etree document"""
-    return lxml.etree.tostring(xml, encoding="unicode", pretty_print=True)
 
 
 def get_var(var, args, context, options={}):
