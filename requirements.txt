@@ -6,3 +6,4 @@ pycryptodome
 jinja2-ansible-filters
 paramiko
 requests
+xlsxwriter

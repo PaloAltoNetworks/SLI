@@ -26,6 +26,7 @@ setuptools.setup(
         'pycryptodome',
         'paramiko',
         'requests',
+        'xlsxwriter',
     ],
     entry_points={
         'console_scripts': [

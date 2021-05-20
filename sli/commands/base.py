@@ -47,5 +47,5 @@ class BaseCommand:
             elif self.sli.verbose:
                 print(results)
 
-            else:
+            elif not getattr(self, "suppress_output", False) is True:
                 print(f"Result Success: {skillet.success}")
