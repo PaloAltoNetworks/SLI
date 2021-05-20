@@ -4,7 +4,7 @@ import yaml
 from jinja2 import Template
 from skilletlib import SkilletLoader
 
-from sli.decorators import require_ngfw_connection_params
+from sli.decorators import require_config
 from .base import BaseCommand
 
 skillet_template = """
@@ -36,8 +36,8 @@ class Capture(BaseCommand):
 
     """
 
-    @require_ngfw_connection_params
-    def run(self):
+    @require_config
+    def run(self, config):
 
         # Render validation skillet for execution
         if len(self.args) < 2 or len(self.args) > 3:
@@ -63,8 +63,12 @@ class Capture(BaseCommand):
         skillet = sl.create_skillet(skillet_dict)
         self.sli.skillet = skillet
 
+        # Create a secondary context object without any cached creds to ensure config
+        # is used from context. Decorator will handle getting a fresh copy of the config
+        # from device if appropriate before this command is called
+        context = {x: y for x, y in self.sli.context.items() if not x.startswith("TARGET_")}
         # Execute skillet and extract values from target
-        exe = skillet.execute(self.sli.context)
+        exe = skillet.execute(context)
         if not skillet.success:
             print('Unable to execute command')
             return

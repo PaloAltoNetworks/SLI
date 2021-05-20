@@ -41,12 +41,16 @@ def require_config(func):
         # Load configuration from file
         if config_file:
             with open(config_file, "r") as f:
-                config = etree.parse(f, parser)
+                contents = f.read()
+                command.sli.context["config"] = contents
+                config = etree.fromstring(contents, parser).getroottree()
         # No configuraiton file specified, connect to device
         else:
             ensure_ngfw_connection_params(command)
             pan = get_panoply_from_context(command)
-            config = etree.fromstring(pan.get_configuration(), parser).getroottree()
+            contents = pan.get_configuration()
+            command.sli.context["config"] = contents
+            config = etree.fromstring(contents, parser).getroottree()
         return func(command, config)
     return wrap
 
