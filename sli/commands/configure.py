@@ -24,7 +24,7 @@ class ConfigureCommand(BaseCommand):
 """
 
     @require_single_skillet
-    @require_skillet_type('panos')
+    @require_skillet_type("panos", "panorama")
     @require_ngfw_connection_params
     @load_variables
     def run(self):
@@ -32,14 +32,14 @@ class ConfigureCommand(BaseCommand):
         print(f"Executing {self.sli.skillet.name}...")
         self.sli.skillet.execute(self.sli.context)
         if self.sli.commit:
-            print('Committing configuration...')
+            print("Committing configuration...")
             self.sli.skillet.panoply.commit()
-            print('Finished')
+            print("Finished")
         else:
-            print('Configuration loaded into candidate config')
+            print("Configuration loaded into candidate config")
 
     @require_single_skillet
-    @require_skillet_type('panos')
+    @require_skillet_type("panos", "panorama")
     @require_ngfw_connection_params
     @load_variables
     def debug(self):
@@ -60,8 +60,8 @@ class ConfigureCommand(BaseCommand):
             for item in loop_vars:
                 change = dict()
 
-                skillet_context['loop'] = item
-                skillet_context['loop_index'] = index
+                skillet_context["loop"] = item
+                skillet_context["loop_index"] = index
 
                 snippet.render_metadata(skillet_context)
 
@@ -70,19 +70,19 @@ class ConfigureCommand(BaseCommand):
                 else:
                     changes[snippet.name] = change
 
-                change['metadata'] = json.dumps(snippet.metadata, indent=4)
-                change['when'] = True
+                change["metadata"] = json.dumps(snippet.metadata, indent=4)
+                change["when"] = True
 
                 if not snippet.should_execute(skillet_context):
-                    change['message'] = 'This snippet would be skipped due to when conditional'
-                    change['when'] = False
+                    change["message"] = 'This snippet would be skipped due to when conditional'
+                    change["when"] = False
                     continue
 
-                if 'cmd' in snippet.metadata and \
-                        snippet.metadata['cmd'] in ('op', 'set', 'edit', 'override', 'move', 'rename',
-                                                    'clone', 'delete'):
+                if "cmd" in snippet.metadata and \
+                        snippet.metadata["cmd"] in ("op", "set", "edit", "override", "move", "rename",
+                                                    "clone", "delete"):
 
-                    change['message'] = 'This snippet would be executed'
+                    change["message"] = "This snippet would be executed"
 
                 else:
                     try:
@@ -94,11 +94,11 @@ class ConfigureCommand(BaseCommand):
                         skillet_context.update(snippet_outputs)
                         skillet_context.update(captured_outputs)
 
-                        change['message'] = 'This snippet was executed to gather results'
-                        change['captured_output'] = json.dumps(captured_outputs, indent=4)
+                        change["message"] = "This snippet was executed to gather results"
+                        change["captured_output"] = json.dumps(captured_outputs, indent=4)
 
                     except PanoplyException as pe:
-                        change['message'] = str(pe)
+                        change["message"] = str(pe)
 
                 index = index + 1
                 snippet.reset_metadata()
