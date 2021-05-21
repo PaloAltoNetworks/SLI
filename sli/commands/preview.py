@@ -13,8 +13,8 @@ Generate output of a panos skillet and write to file
 
 
 class PreviewCommand(BaseCommand):
-    sli_command = 'preview'
-    short_desc = 'Generate output of a panos skillet and write to file'
+    sli_command = "preview"
+    short_desc = "Generate output of a panos skillet and write to file"
     help_text = """
 
         Load and run a panos configuration skillet, saving the output to
@@ -25,7 +25,7 @@ class PreviewCommand(BaseCommand):
 """
 
     @require_single_skillet
-    @require_skillet_type('panos')
+    @require_skillet_type("panos", "panorama")
     @load_variables
     @require_config
     def run(self, config):
@@ -36,11 +36,11 @@ class PreviewCommand(BaseCommand):
 
             if not snippet.should_execute(self.sli.context):
                 continue
-            xpath = snippet.metadata.get('xpath')
             meta = snippet.render_metadata(self.sli.context)
-            element = meta.get('element')
-            child_tag = xpath.split('/')[-1]
+            xpath = snippet.metadata.get("xpath")
+            element = meta.get("element")
+            child_tag = xpath.split("/")[-1]
             child_xml = etree.fromstring(f"<{child_tag}>{element}</{child_tag}>")
             merge_xml_into_config(xpath, config, child_xml)
 
-        config.write(out_file, encoding='utf-8', pretty_print=True, xml_declaration=True)
+        config.write(out_file, encoding="utf-8", pretty_print=True, xml_declaration=True)

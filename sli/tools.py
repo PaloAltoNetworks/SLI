@@ -398,7 +398,16 @@ def merge_into_parent(xpath, config, child_xml):
     # Create the missing gap of XML elements and place new elements inside
     missing_elements = [x for x in xpath.replace(common_xpath, "").split("/") if x]
     for element in missing_elements:
-        new_element = etree.Element(element)
+        attr_name = None
+        attr_value = None
+        if "@" in element and "[" in element:
+            element, predicate = element.split("[")
+            for c in '[]@ |&"\'':
+                predicate = predicate.replace(c, "")
+            attr_name, attr_value = predicate.split("=")
+        new_element = etree.Element(element.strip())
+        if attr_name:
+            new_element.set(attr_name, attr_value)
         cursor_element.append(new_element)
         cursor_element = new_element
         print(f"   Added missing element {cursor_element.tag} to cursor")

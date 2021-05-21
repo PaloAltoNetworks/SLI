@@ -45,8 +45,13 @@ class LoadConfig(BaseCommand):
         print(f"Loaded {file_name}")
         xml = etree.fromstring(r.text)
         if not xml.xpath("@status")[0].lower() == "success":
-            err = xml.xpath("result/msg/text()")[0]
-            print(f"Error from NGFW: \n{err}")
+            err = "".join(xml.xpath("//msg/text()"))
+            if not len(err):
+                err = "".join(xml.xpath("//line/text()"))
+            if len(err):
+                print(f"Error from device: \n{err}")
+            else:
+                print("Unable to push configuration to device")
             return
 
         # Configuration file is on device, load it as candidate config
