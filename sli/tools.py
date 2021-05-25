@@ -6,6 +6,17 @@ import socket
 from jinja2 import Environment
 import jmespath
 from lxml import etree
+import yaml
+
+
+class SkilletYamlDumper(yaml.SafeDumper):
+    """
+    Used in yaml.dump to create appropriate spacing for skillet format
+    """
+    def write_line_break(self, data=None):
+        super().write_line_break(data)
+        if len(self.indents) < 3:
+            super().write_line_break()
 
 
 def get_var(var, args, context, options={}):
