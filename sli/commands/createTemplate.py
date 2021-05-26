@@ -3,6 +3,7 @@ from sli.decorators import require_single_skillet, require_skillet_type
 
 from lxml import etree
 import re
+from io import BytesIO
 
 
 class CreateTemplate(BaseCommand):
@@ -27,22 +28,46 @@ class CreateTemplate(BaseCommand):
             if line["line"] == i:
 
                 leading_spaces = len(cl) - len(cl.lstrip())
+                closing_tag = None
 
                 # If tag without children, expand to tag with children and insert template
-                if re.search(r'<[a-zA-Z0-9]+/>', cl):
+                if re.search(r'<[a-zA-Z0-9-]+/>', cl):
                     ll = cl.replace("/", "")
                     r += ll + "\n"
-                    for tl in line["template"].split("\n"):
-                        r += " " * leading_spaces + tl + "\n"
-                    r += ll.replace("<", "</") + "\n"
+                    closing_tag = ll.replace("<", "</") + "\n"
 
                 # If not a tag at all, there's already a template here, just insert
+                elif not cl.strip().startswith("<"):
+                    pass
 
                 # If just an opening tag is present, insert after
+                else:
+                    r += cl + "\n"
 
-            r += cl + "\n"
+                for tl in line["template"].split("\n"):
+                    r += " " * leading_spaces + tl + "\n"
+                if closing_tag is not None:
+                    r += closing_tag
+
+            else:
+                r += cl + "\n"
             i += 1
         return r
+
+    @staticmethod
+    def find_closest_entry(xml, xpath):
+        xs = [x for x in xpath.split("/") if len(x)]
+        for i in range(len(xs)):
+            xpath_short = "/" + "/".join(xs[:-1 * (i + 1)])
+            if not len(xpath_short):
+                raise Exception(f"Could not find valid entry point for {xpath}")
+            found = xml.xpath(xpath_short)
+            if len(found) == 0:
+                continue
+            else:
+                missing = [x for x in xpath.replace(xpath_short, "").split("/") if len(x)]
+                break
+        return xpath_short, missing
 
     @require_single_skillet
     @require_skillet_type("panos", "panorama")
@@ -55,9 +80,10 @@ class CreateTemplate(BaseCommand):
         baseline_file = self.args[0]
         with open(baseline_file, "r") as f:
             config = f.read()
-            baseline_xml = etree.fromstring(config)
-
-        # TODO: Verify that baseline file does not contain multiple elements per line
+            f.seek(0)
+            parser = etree.XMLParser(remove_blank_text=True)
+            # baseline_xml = etree.fromstring(config)
+            baseline_xml = etree.parse(f, parser)
 
         snippets = self.sli.skillet.get_snippets()
         # Verify required parameters present in snippets
@@ -68,6 +94,36 @@ class CreateTemplate(BaseCommand):
             if "xpath" not in snippet.metadata:
                 print(f"Snippet {snippet.name} has no xpath")
                 return
+
+        # Expand any missing XML nodes
+        for snippet in snippets:
+            if len(baseline_xml.xpath(snippet.metadata["xpath"])):
+                continue
+            short_xpath, missing = self.find_closest_entry(baseline_xml, snippet.metadata["xpath"])
+            ele = baseline_xml.xpath(short_xpath)[0]
+            for missing_ele in missing:
+                attr = None
+                new_ele_tag = missing_ele
+                if "[" in missing_ele:
+                    es = missing_ele.split("[")
+                    new_ele_tag = es[0]
+                    attr = es[1].strip()
+                    for c in "[]@'\" ":
+                        attr = attr.replace(c, "")
+                    attr = attr.split("=")
+                new_ele = etree.Element(new_ele_tag)
+                if attr is not None:
+                    new_ele.set(*attr)
+                ele.append(new_ele)
+                print(f" -- Appended {new_ele_tag}")
+                ele = new_ele
+
+        # Rewrite config var and reload xml document to ensure accurate line numbers
+        temp_file = BytesIO()
+        baseline_xml.write(temp_file, pretty_print=True)
+        temp_file.seek(0)
+        print(temp_file.read().decode())
+        return
 
         # Find the various insert points on all snippets
         lines = []
@@ -84,20 +140,7 @@ class CreateTemplate(BaseCommand):
 
             # Need to shorten the xpath to find the best entry point
             else:
-                xs = [x for x in xpath.split("/") if len(x)]
-                for i in range(len(xs)):
-                    xpath_short = "/" + "/".join(xs[:-1 * (i + 1)])
-                    if not len(xpath_short):
-                        print(f"Could not find valid entry point for {xpath}")
-                        return
-                    found = baseline_xml.xpath(xpath_short)
-                    if len(found) > 1:
-                        print(f"xpath {xpath} returned more than 1 result in baseline")
-                        return
-                    elif len(found) == 1:
-                        missing = [x for x in xpath.replace(xpath_short, "").split("/") if len(x)]
-                        lines.append({"template": snippet.template_str, "line": found[0].sourceline, "missing": missing})
-                        break
+                raise Exception(f" Unable to find entry point for {xpath}")
 
         # Sort the keys so we're starting from the point furthest down the file
         lines = sorted(lines, key=lambda i: i["line"], reverse=True)
