@@ -1,8 +1,8 @@
 from .base import BaseCommand
 from sli.decorators import require_single_skillet, require_skillet_type
 
-import yaml
 from lxml import etree
+import re
 
 
 class CreateTemplate(BaseCommand):
@@ -17,12 +17,32 @@ class CreateTemplate(BaseCommand):
 """
 
     @staticmethod
-    def insert_template_str(xml_doc, line_number, template_string):
+    def insert_template_str(line, config):
         """
-        Break up an xml_doc (str) at line_number to inject template_string.
-        Return the updated xml_doc string
+        Break up an xml config (str) at a specified line to inject template_string.
         """
-        pass
+        i = 1
+        r = ""
+        for cl in [x for x in config.split("\n") if len(x)]:
+            if line["line"] == i:
+
+                leading_spaces = len(cl) - len(cl.lstrip())
+
+                # If tag without children, expand to tag with children and insert template
+                if re.search(r'<[a-zA-Z0-9]+/>', cl):
+                    ll = cl.replace("/", "")
+                    r += ll + "\n"
+                    for tl in line["template"].split("\n"):
+                        r += " " * leading_spaces + tl + "\n"
+                    r += ll.replace("<", "</") + "\n"
+
+                # If not a tag at all, there's already a template here, just insert
+
+                # If just an opening tag is present, insert after
+
+            r += cl + "\n"
+            i += 1
+        return r
 
     @require_single_skillet
     @require_skillet_type("panos", "panorama")
@@ -34,7 +54,8 @@ class CreateTemplate(BaseCommand):
         out_file = self.args[1]
         baseline_file = self.args[0]
         with open(baseline_file, "r") as f:
-            baseline_xml = etree.fromstring(f.read())
+            config = f.read()
+            baseline_xml = etree.fromstring(config)
 
         # TODO: Verify that baseline file does not contain multiple elements per line
 
@@ -49,19 +70,41 @@ class CreateTemplate(BaseCommand):
                 return
 
         # Find the various insert points on all snippets
-        lines = {}
+        lines = []
         for snippet in snippets:
-            found = baseline_xml.xpath(snippet.metadata["xpath"])
+            xpath = snippet.metadata["xpath"]
+            found = baseline_xml.xpath(xpath)
             if len(found) > 1:
-                print(f"xpath {snippet.metadata['xpath']} returned more than 1 result in baseline")
+                print(f"xpath {xpath} returned more than 1 result in baseline")
+                return
+
+            # Xpath references a valid entry point
             if len(found):
-                if found[0].sourceline in lines:
-                    print(f"Tag {found[0].tag} has overlapping insert at line {found[0].sourceline}")
-                    return
-                lines[found[0].sourceline] = snippet.template_str
+                lines.append({"template": snippet.template_str, "line": found[0].sourceline})
+
+            # Need to shorten the xpath to find the best entry point
             else:
-                print("Found nothing")
+                xs = [x for x in xpath.split("/") if len(x)]
+                for i in range(len(xs)):
+                    xpath_short = "/" + "/".join(xs[:-1 * (i + 1)])
+                    if not len(xpath_short):
+                        print(f"Could not find valid entry point for {xpath}")
+                        return
+                    found = baseline_xml.xpath(xpath_short)
+                    if len(found) > 1:
+                        print(f"xpath {xpath} returned more than 1 result in baseline")
+                        return
+                    elif len(found) == 1:
+                        missing = [x for x in xpath.replace(xpath_short, "").split("/") if len(x)]
+                        lines.append({"template": snippet.template_str, "line": found[0].sourceline, "missing": missing})
+                        break
 
         # Sort the keys so we're starting from the point furthest down the file
+        lines = sorted(lines, key=lambda i: i["line"], reverse=True)
 
         # Insert snippets one at a time until complete
+        for line in lines:
+            config = self.insert_template_str(line, config)
+
+        with open(out_file, "w") as f:
+            f.write(config)
