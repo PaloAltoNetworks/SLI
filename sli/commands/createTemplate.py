@@ -56,6 +56,11 @@ class CreateTemplate(BaseCommand):
 
     @staticmethod
     def find_closest_entry(xml, xpath):
+        """
+        find the shortest xpath that returns a valid element, and determine what
+        nodes are missing from the full expath. Returns a tuple containing the
+        shortened xpath that matches a node, and a list of the missing nodes
+        """
         xs = [x for x in xpath.split("/") if len(x)]
         for i in range(len(xs)):
             xpath_short = "/" + "/".join(xs[:-1 * (i + 1)])
@@ -82,10 +87,10 @@ class CreateTemplate(BaseCommand):
             config = f.read()
             f.seek(0)
             parser = etree.XMLParser(remove_blank_text=True)
-            # baseline_xml = etree.fromstring(config)
             baseline_xml = etree.parse(f, parser)
 
         snippets = self.sli.skillet.get_snippets()
+
         # Verify required parameters present in snippets
         for snippet in snippets:
             if getattr(snippet, "template_str", None) is None:
@@ -115,32 +120,29 @@ class CreateTemplate(BaseCommand):
                 if attr is not None:
                     new_ele.set(*attr)
                 ele.append(new_ele)
-                print(f" -- Appended {new_ele_tag}")
                 ele = new_ele
 
         # Rewrite config var and reload xml document to ensure accurate line numbers
         temp_file = BytesIO()
         baseline_xml.write(temp_file, pretty_print=True)
         temp_file.seek(0)
-        print(temp_file.read().decode())
-        return
+        config = temp_file.read().decode()
+        baseline_xml = etree.fromstring(config)
 
         # Find the various insert points on all snippets
         lines = []
         for snippet in snippets:
             xpath = snippet.metadata["xpath"]
             found = baseline_xml.xpath(xpath)
+
             if len(found) > 1:
-                print(f"xpath {xpath} returned more than 1 result in baseline")
-                return
-
-            # Xpath references a valid entry point
-            if len(found):
-                lines.append({"template": snippet.template_str, "line": found[0].sourceline})
-
-            # Need to shorten the xpath to find the best entry point
-            else:
+                raise Exception(f"xpath {xpath} returned more than 1 result in baseline")
+            elif not len(found):
                 raise Exception(f" Unable to find entry point for {xpath}")
+
+            # Insert point found
+            else:
+                lines.append({"template": snippet.template_str, "line": found[0].sourceline})
 
         # Sort the keys so we're starting from the point furthest down the file
         lines = sorted(lines, key=lambda i: i["line"], reverse=True)
