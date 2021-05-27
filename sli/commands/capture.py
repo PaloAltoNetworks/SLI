@@ -81,8 +81,9 @@ class Capture(BaseCommand):
             print(f'Output added to context as {capture_var}')
 
     def _get_output(self):
-        results = self.sli.skillet.get_results()
-        # Print captured JSON
-        output = results['outputs']
-        if 'capture_test' in output:
-            print(json.dumps(output['capture_test'], indent=4))
+        if self.sli.skillet is not None:
+            results = self.sli.skillet.get_results()
+            # Print captured JSON
+            output = results['outputs']
+            if 'capture_test' in output:
+                print(json.dumps(output['capture_test'], indent=4))
