@@ -172,7 +172,7 @@ this cannot be undone.
 sli capture list  "/config/devices/entry[@name='localhost.localdomain']/vsys/entry/rulebase/decryption/rules/entry/@name"
 
  # Same as above, except this command will store the output to the default context in the variable "decryption_rules"
-sli capture -uc list "/config/devices/entry[@name='localhost.localdomain']/vsys/entry/rulebase/decryption/rules/entry/@name" decryption_rules
+sli capture -uc list "/config/devices/entry[@name='localhost.localdomain']/vsys/entry/rulebase/decryption/rules/entry/@name" -cv decryption_rules
 
  # Capturing an object works similar to capturing a list
 sli capture object "/config/devices/entry[@name='localhost.localdomain']/vsys/entry/rulebase/decryption"
@@ -182,7 +182,21 @@ sli capture -uc expression "decryption_rules | json_query('[].entry[].category.m
 
  # Windows requires an additional escape character on double quotes, a ` is required in addition to the \
  sli capture -uc expression "decryption_obj | json_query('decryption.rules.entry[].\`"@name\`"')"
+
+
   ```
+When using the capture command, escapings strings can make things difficult for more involved quries. You can also omit
+the query, and sli will prompt you for it literally, with no escaping required
+  ```  
+sli capture -uc expression -cv test_out
+
+capture_expression: sec_rules | json_query('[].rules.entry[? @."@name" == `web_browsing`].action[]')
+Output added to context as test_out
+[
+    "allow"
+]
+  ```
+
 SLI can also provide a diff of the candidate and running config to provide an xpath / XML combo.
 ```
  # This command gets the device credentials from the default context and runs a diff
