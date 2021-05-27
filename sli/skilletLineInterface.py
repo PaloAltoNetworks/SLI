@@ -18,8 +18,8 @@ class SkilletLineInterface:
         self._load_commands()
         self._verify_command()
         self.sl = SkilletLoader()
-        self.no_skillet = getattr(self.command_map[self.action], 'no_skillet', False) is True
-        self.no_context = getattr(self.command_map[self.action], 'no_context', False) is True
+        self.no_skillet = getattr(self.command_map[self.action], "no_skillet", False) is True
+        self.no_context = getattr(self.command_map[self.action], "no_context", False) is True
 
         # Load skillets only if the command requires them
         if not self.no_skillet:
@@ -36,9 +36,9 @@ class SkilletLineInterface:
 
     def _unpack_options(self):
         """Unpack options onto self where required"""
-        for opt in ('verbose', 'commit', 'report', 'loader_error', 'output_format', 'no_config'):
+        for opt in ("verbose", "commit", "report", "loader_error", "output_format", "no_config", "context_var"):
             setattr(self, opt, self.options.get(opt, False))
-        self.report_file = self.options.get('report_file', '')
+        self.report_file = self.options.get("report_file", "")
 
         # If a report file was specified, assume we want to create it
         if self.report_file:
@@ -64,7 +64,7 @@ class SkilletLineInterface:
                     if isclass(item_attr_obj):
 
                         # Load only SLI command modules that are appropriately written
-                        command_string = getattr(item_attr_obj, 'sli_command', '')
+                        command_string = getattr(item_attr_obj, "sli_command", "")
                         if len(command_string) > 0:
                             command_map[command_string] = item_attr_obj
 
@@ -76,14 +76,14 @@ class SkilletLineInterface:
 
     def _load_skillets(self):
         """Called in __init__ to front end SkilletLoader"""
-        self.skillets = self.sl.load_all_skillets_from_dir(self.options.get('directory', './'))
+        self.skillets = self.sl.load_all_skillets_from_dir(self.options.get("directory", "./"))
         if len(self.sl.skillet_errors) > 0:
-            print('Errors on loading skillets:')
+            print("Errors on loading skillets:")
             for err in self.sl.skillet_errors:
                 for key in err:
                     print(f"   {key} - {err[key]}")
             if self.loader_error:
-                raise Exception('SkilletLoader encountered errors')
+                raise Exception("SkilletLoader encountered errors")
 
     def _verify_loaded_skillets(self):
         """Perform any pre-execution validations against loaded skillets"""
@@ -111,10 +111,10 @@ class SkilletLineInterface:
 
         # Update context with new keys from skillet run
         if not self.no_context:
-            skillet_context = getattr(self.skillet, 'context', None)
+            skillet_context = getattr(self.skillet, "context", None)
             if skillet_context:
                 for key in skillet_context.keys():
-                    if key not in ['loop', 'loop_index']:
+                    if key not in ["loop", "loop_index"]:
                         self.context[key] = skillet_context[key]
             self.cm.save_context(self.context)
 

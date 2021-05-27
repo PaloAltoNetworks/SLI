@@ -39,20 +39,17 @@ class Capture(BaseCommand):
     @require_config
     def run(self, config):
 
-        # Render validation skillet for execution
-        if len(self.args) < 2 or len(self.args) > 3:
+        if len(self.args) < 1 or len(self.args) > 2:
             print(self.help_text)
             return
 
         capture_method = self.args[0]
-        capture_arg = self.args[1]
-        capture_var = ''
-        if len(self.args) == 3:
-            capture_var = self.args[2]
-        if capture_method not in valid_methods:
-            print(f'Invalid method - {capture_method}')
-            print(self.help_text)
-            return
+        capture_arg = None
+        capture_var = getattr(self.sli, "context_var")
+        if len(self.args) > 1:
+            capture_arg = self.args[1]
+        if not capture_arg:
+            capture_arg = input(f"\ncapture_{capture_method}: ")
 
         skillet_yaml = Template(skillet_template).render({
             'capture_method': capture_method,
@@ -76,7 +73,7 @@ class Capture(BaseCommand):
         output = exe['outputs']['capture_test']
 
         # Update context if using context
-        if self.sli.cm.use_context and len(capture_var) > 1:
+        if self.sli.cm.use_context and capture_var:
             self.sli.context[capture_var] = output
             print(f'Output added to context as {capture_var}')
 
