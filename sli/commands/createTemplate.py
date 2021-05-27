@@ -64,7 +64,7 @@ class CreateTemplate(BaseCommand):
         xs = [x for x in xpath.split("/") if len(x)]
         for i in range(len(xs)):
             xpath_short = "/" + "/".join(xs[:-1 * (i + 1)])
-            if not len(xpath_short):
+            if len(xpath_short) < 1:
                 raise Exception(f"Could not find valid entry point for {xpath}")
             found = xml.xpath(xpath_short)
             if len(found) == 0:

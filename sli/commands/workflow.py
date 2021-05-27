@@ -6,6 +6,7 @@ from sli.decorators import require_single_skillet
 from sli.decorators import require_skillet_type
 from sli.tools import get_var
 from sli.tools import render_expression
+from sli.tools import input_yes_no
 from .base import BaseCommand
 
 
@@ -44,6 +45,14 @@ class WorkflowCommand(BaseCommand):
             for var in snippet_skillet.variables:
                 get_var(var, self.args, self.sli.context)
             exe = snippet_skillet.execute(self.sli.context)
+            if snippet_skillet.type in ["panos", "panorama"]:
+                commit = self.sli.commit
+                if not commit:
+                    commit = input_yes_no("Commit the configuration?", True)
+                if commit:
+                    print("Committing configuration...")
+                    snippet_skillet.panoply.commit()
+                    print("Finished commit")
             self.sli.context.update(snippet_skillet.context)
 
             # Handle outputs
