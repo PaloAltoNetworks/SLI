@@ -64,7 +64,7 @@ class FormatHelp(click.Command):
 @click.option("-cv", "--context-var", help="Context variable to store output in")
 @click.option("-nc", "--no-config", is_flag=True, help="Hide full device configuration from output", )
 @click.option("-of", "--output-format", help="Output format, xml or set",
-              type=click.Choice(["xml", "set"]), default="xml"
+              type=click.Choice(["xml", "set", "skillet"]), default="xml"
               )
 @click.option("-ad", "--defaults", is_flag=True, help="Assume all default inputs, useful for development")
 @click.argument("action", nargs=1, default="execute")

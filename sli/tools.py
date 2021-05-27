@@ -7,6 +7,7 @@ from jinja2 import Environment
 import jmespath
 from lxml import etree
 import yaml
+from io import BytesIO
 
 
 class SkilletYamlDumper(yaml.SafeDumper):
@@ -446,3 +447,15 @@ def merge_xml_into_config(xpath, config, child_xml):
 
     else:
         raise Exception("Skillet xpath returned multiple results on device, cannot merge.")
+
+
+def format_xml_string(xml, indent=0):
+    """Take a string of XML and reformat it for proper spacing at a specified indent level"""
+
+    parser = etree.XMLParser(remove_blank_text=True)
+    xml_doc = etree.fromstring(xml, parser)
+    temp_file = BytesIO()
+    xml_doc.getroottree().write(temp_file, pretty_print=True)
+    temp_file.seek(0)
+    formatted_xml = temp_file.read().decode()
+    return "\n".join([" " * indent + x for x in formatted_xml.split("\n")])
