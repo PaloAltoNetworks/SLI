@@ -44,6 +44,10 @@ class Capture(BaseCommand):
             return
 
         capture_method = self.args[0]
+        if capture_method not in ["list", "object", "expression"]:
+            print(self.help_text)
+            return
+
         capture_arg = None
         capture_var = getattr(self.sli, "context_var")
         if len(self.args) > 1:
