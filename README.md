@@ -10,6 +10,8 @@ A CLI interface for interacting with skillets. Skillets are sharable sets of con
 See [Live](https://live.paloaltonetworks.com/t5/quickplay-solutions-discussions/the-palo-alto-networks-skillet-story/m-p/308056)
 for more information.
 
+Vist the [SkilletBuilder](https://github.com/PaloAltoNetworks/SkilletBuilder) project for information about skillets, sample skillets,
+and documentation related to skillets.
   
 
 ## Installation
