@@ -20,6 +20,18 @@ class SkilletYamlDumper(yaml.SafeDumper):
             super().write_line_break()
 
 
+def str_presenter(dumper, data):
+    """
+    Added to SkilletYamlDumper for proper rendering of multi-line text
+    """
+    if len(data.splitlines()) > 1:
+        return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
+    return dumper.represent_scalar("tag:yaml.org,2002:str", data)
+
+
+SkilletYamlDumper.add_representer(str, str_presenter)
+
+
 def get_var(var, args, context, options={}):
     """Get a var by searching args and the context, else ask the user"""
     args = {x.split('=')[0]: x.split('=')[1] for x in args if '=' in x}
