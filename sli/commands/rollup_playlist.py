@@ -27,6 +27,7 @@ class RollupPlaylist(BaseCommand):
         new_skillet = {}
         for attr in ["name", "label", "description", "type", "labels", "variables"]:
             new_skillet[attr] = getattr(self.sli.skillet, attr)
+        new_skillet["name"] += "_rollup"
         new_skillet["snippets"] = [x.metadata for x in self.sli.skillet.snippets]
         for snippet in new_skillet["snippets"]:
             del_keys = [key for key, value in snippet.items() if not value]

@@ -78,23 +78,44 @@ class DiffCommand(BaseCommand):
         previous_config = pan.get_configuration(config_source=source_name)
         latest_config = pan.get_configuration(config_source=latest_name)
 
+        output = ""
+        out_file = self.sli.options.get("out_file")
+
         if self.sli.output_format == "xml":
             diff = pan.generate_skillet_from_configs(previous_config, latest_config)
             for obj in diff:
-                print(f'name: {obj["name"]}')
-                print(f'xpath: {obj["xpath"]}')
-                print(f'element: {obj["element"]}\n\n')
+                output += f'name: {obj["name"]}\n'
+                output += f'xpath: {obj["xpath"]}\n'
+                output += f'element: {obj["element"]}\n\n'
+            print(output)
 
         elif self.sli.output_format == "set":
             diff = pan.generate_set_cli_from_configs(previous_config, latest_config)
-            for line in diff:
-                print(line)
+            output = "\n".join(diff)
+            print(output)
 
         else:
             # Skillet format
             diff = pan.generate_skillet_from_configs(previous_config, latest_config)
-            template = Template("""
-name: skillet_name
+            template = Template(skillet_template)
+            generated_snippets = [{
+                    "xml": format_xml_string(x["element"], indent=6),
+                    "xpath": x["full_xpath"]
+                } for x in diff]
+            output = template.render({"snippets": generated_snippets})
+            print(output)
+
+            # Update context if using context
+            if self.sli.cm.use_context and capture_var is not None:
+                self.sli.context[capture_var] = diff
+                print(f'Output added to context as {capture_var}')
+
+        if output and out_file:
+            with open(out_file, "w") as f:
+                f.write(output)
+
+
+skillet_template = """name: skillet_name
 label: skillet_label
 description: skillet_description
 
@@ -107,16 +128,5 @@ snippets:
   - name: snippet_{{ loop.index }}
     xpath: {{ s.xpath }}
     element: |-
-{{ s.xml }}
-{% endfor %}
-""")
-        generated_snippets = [{
-                "xml": format_xml_string(x["element"], indent=6),
-                "xpath": x["full_xpath"]
-            } for x in diff]
-        print(template.render({"snippets": generated_snippets}))
-
-        # Update context if using context
-        if self.sli.cm.use_context and capture_var is not None:
-            self.sli.context[capture_var] = diff
-            print(f'Output added to context as {capture_var}')
+{{ s.xml }}{% endfor %}
+"""
