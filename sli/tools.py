@@ -7,6 +7,16 @@ from jinja2 import Environment
 import jmespath
 from lxml import etree
 from io import BytesIO
+import hashlib
+import binascii
+
+
+def hash_file_contents(file_path):
+    """Hash a file with sha256 at file_path and return hex as a string"""
+    sha = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        sha.update(f.read())
+    return binascii.hexlify(sha.digest()).decode()
 
 
 def get_var(var, args, context, options={}):
