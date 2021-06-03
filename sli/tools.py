@@ -6,30 +6,7 @@ import socket
 from jinja2 import Environment
 import jmespath
 from lxml import etree
-import yaml
 from io import BytesIO
-
-
-class SkilletYamlDumper(yaml.SafeDumper):
-    """
-    Used in yaml.dump to create appropriate spacing for skillet format
-    """
-    def write_line_break(self, data=None):
-        super().write_line_break(data)
-        if len(self.indents) < 3:
-            super().write_line_break()
-
-
-def str_presenter(dumper, data):
-    """
-    Added to SkilletYamlDumper for proper rendering of multi-line text
-    """
-    if len(data.splitlines()) > 1:
-        return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
-    return dumper.represent_scalar("tag:yaml.org,2002:str", data)
-
-
-SkilletYamlDumper.add_representer(str, str_presenter)
 
 
 def get_var(var, args, context, options={}):

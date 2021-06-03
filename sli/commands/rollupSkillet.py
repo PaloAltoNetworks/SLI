@@ -1,6 +1,7 @@
 from .base import BaseCommand
 import yaml
-from sli.tools import SkilletYamlDumper
+
+from skilletlib.skillet.panos import PanosSkillet
 
 
 class RollupSkillet(BaseCommand):
@@ -25,12 +26,6 @@ class RollupSkillet(BaseCommand):
         out_file = self.args[1]
         with open(skillet_file, "r") as f:
             skillet = yaml.safe_load(f)
-        out_str = yaml.dump(
-                {x: y for x, y in skillet.items() if not x == "snippets"},
-                Dumper=SkilletYamlDumper,
-                sort_keys=False
-            )
-        out_str += "\nsnippets:\n"
 
         # Validate supported keys in snippets
         for snippet in skillet["snippets"]:
@@ -43,17 +38,13 @@ class RollupSkillet(BaseCommand):
                     print(f"Snippet missing required key {key}")
                     return
 
-        # Generate new skillet with inline XML
-        for snippet in skillet["snippets"]:
-            out_str += f"\n  - name: {snippet['name']}\n"
-            for key, value in {x: y for x, y in snippet.items() if not x == "file" and not x == "name"}.items():
-                out_str += f"    {key}: {value}\n"
-            with open(snippet["file"], 'r') as f:
-                xml_contents = f.read()
-                out_str += "    element: |-\n"
-                for line in xml_contents.split("\n"):
-                    out_str += f"      {line}\n"
+        # Load updated dict with merged configuration files
+        updated_dict = PanosSkillet(skillet).skillet_dict
+        for s in updated_dict["snippets"]:
+            del_items = [key for key, value in s.items() if not value or key == "file"]
+            for item in del_items:
+                del(s[item])
 
-        # Generate outfile
+        out_str = PanosSkillet(updated_dict).dump_yaml()
         with open(out_file, "w") as f:
             f.write(out_str)

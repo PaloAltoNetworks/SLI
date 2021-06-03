@@ -1,8 +1,8 @@
 from .base import BaseCommand
-import yaml
-from sli.tools import SkilletYamlDumper
 from sli.decorators import require_single_skillet
 from sli.decorators import require_skillet_type
+
+from skilletlib.skillet.panos import PanosSkillet
 
 
 class RollupPlaylist(BaseCommand):
@@ -32,9 +32,9 @@ class RollupPlaylist(BaseCommand):
         for snippet in new_skillet["snippets"]:
             del_keys = [key for key, value in snippet.items() if not value]
             for key in del_keys:
-                del(snippet[key])
+                snippet.pop(key)
 
-        out_str = yaml.dump(new_skillet, sort_keys=False, Dumper=SkilletYamlDumper)
+        out_str = PanosSkillet(new_skillet).dump_yaml()
         with open(out_file, "w") as f:
             f.write(out_str)
         print(f"New skillet written to {out_file}")
