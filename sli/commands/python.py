@@ -57,10 +57,11 @@ class PythonCommand(BaseCommand):
                     print(f"Docker build failed for image {image_tag}")
                 docker_client.clear_build_dir()
 
+            # Build an execute a container using script from snippet
             print(f"Using image {image_tag}")
-
-            # TODO: Clear run directory and add new files
-
+            docker_client.clear_run_dir()
+            docker_client.add_run_rile(script_path)
+            breakpoint()
             print("Running container...")
             # Hash container name to ensure valid characters and exclusive execution
             container_name = hash_string(self.sli.skillet.name + "-" + snippet.name)[:15]
@@ -68,4 +69,4 @@ class PythonCommand(BaseCommand):
 
             exit()  # TODO: Delete before merging
 
-            # Execute container
+            # Capture outputs

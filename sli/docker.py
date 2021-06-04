@@ -32,8 +32,15 @@ class DockerClient:
                 os.mkdir(d)
 
     def clear_build_dir(self):
-        for item in os.listdir(self.build_path):
-            item_path = self.build_path + os.sep + item
+        self.clear_dir(self.build_path)
+
+    def clear_run_dir(self):
+        self.clear_dir(self.run_path)
+
+    @staticmethod
+    def clear_dir(target):
+        for item in os.listdir(target):
+            item_path = target + os.sep + item
             if os.path.isdir(item_path):
                 shutil.rmtree(item_path)
             else:
@@ -64,6 +71,22 @@ class DockerClient:
         """Add a file to docker build director, is_str signifies if file is passed in as string"""
         file_name = file_name.replace("/", os.sep)
         dst_path = self.build_path + os.sep + file_name
+        if is_str:
+            with open(dst_path, "w") as f:
+                f.write(file_src)
+        else:
+            if os.path.isdir(file_src):
+                shutil.copytree(file_src, dst_path)
+            else:
+                shutil.copy(file_src, dst_path)
+
+    def add_run_file(self, file_src, file_name, is_str=False):
+        self.add_file_to_dir(file_src, file_name, self.run_path, is_str=is_str)
+
+    @staticmethod
+    def add_file_to_dir(file_src, file_name, target_dir, is_str=False):
+        file_name = file_name.replace("/", os.sep)
+        dst_path = target_dir + os.sep + file_name
         if is_str:
             with open(dst_path, "w") as f:
                 f.write(file_src)
