@@ -3,6 +3,7 @@ from sli.tools import expandedHomePath
 import os
 import shutil
 import json
+import time
 from pprint import pprint
 
 
@@ -130,7 +131,7 @@ class DockerClient:
             return found[0]
         return None
 
-    def run_ephemeral(self, tag, container_name, run_dir, run_cmd):
+    def run_ephemeral(self, tag, container_name, run_cmd):
         """
         Create an ephemeral container, execute, and remove container
         """
@@ -147,20 +148,33 @@ class DockerClient:
                 command=run_cmd,
                 volumes=["/app"],
                 host_config=self.client.create_host_config(binds=[
-                    f"{run_dir}:/app"
+                    f"{self.run_path}:/app"
                 ])
             )
         container_id = container_obj.get("Id")
         if not container_id:
             raise Exception(f"Unable to create container from image {tag}")
 
+        # Start the container, monitor its status, display it's output
         self.client.start(container_id)
+        container = self.get_container(container_name)
+        logs = self.client.logs(container_id).decode("utf-8")
+        print(logs)
+        logs_len = len(logs)
+        while container.get("State", "") == "running":
+            time.sleep(1)
+            container = self.get_container(container_name)
+            logs = self.client.logs(container_id).decode("utf-8")
+            if len(logs) > logs_len:
+                print(logs[logs_len:])
+                logs_len += len(logs)
+
+        # State has changed, let it exit and grab the exit code
         exit_code = self.client.wait(container_id)
         if not exit_code["StatusCode"] == 0:
             print(f"Container error: {exit_code['Error']}")
             raise Exception(f"Container {container_id} returned exit code {exit_code}")
         print("Container ran successfully")
-        container_logs = self.client.logs(container_id).decode("utf-8")
-        print(container_logs)
+        return self.client.logs(container_id).decode("utf-8")
 
         self.client.remove_container(container_id, force=True)
