@@ -1,0 +1,24 @@
+name: ansible_task_template
+label: ansible_task_template
+description: ansible_task_template
+
+type: template
+
+variables:
+  - name: snippets
+    type_hint: text
+    description: snippets to include
+    default: [ ]
+
+snippets:
+  - name: task_data
+    element: |-
+      ---
+      {%- for snippet in snippets %}
+      - name: {{ snippet.name }}
+        panos_type_cmd:
+          xpath: |
+            {{ snippet.xpath }}
+          element: |
+            {{ snippet.element }}
+      {% endfor %}

@@ -1,14 +1,23 @@
-from .base import BaseCommand
-from sli.decorators import require_ngfw_connection_params, require_panoply_connection
+from pathlib import Path
+from typing import Tuple
 
-from jinja2 import Template
-from sli.tools import format_xml_string
+from skilletlib import Skillet
+from skilletlib import SkilletLoader
+
+from sli.decorators import require_ngfw_connection_params
+from sli.decorators import require_panoply_connection
+from .base import BaseCommand
+from ..errors import AppSkilletNotFoundException
+from ..errors import InvalidArgumentsException
+from ..errors import SLIException
 
 
 class DiffCommand(BaseCommand):
     sli_command = "diff"
     short_desc = "Get the differences between two config versions, candidate, running, previous running, etc"
     no_skillet = True
+    capture_var = None
+    pan = None
     help_text = """
         Diff module requires 0 to 3 arguments.
 
@@ -46,87 +55,123 @@ class DiffCommand(BaseCommand):
             user$ sli diff running candidate candidate_diff -uc
     """
 
-    @require_ngfw_connection_params
-    @require_panoply_connection
-    def run(self, pan):
-        """Get a diff of running and candidate configs"""
+    @staticmethod
+    def _load_app_skillet(skillet_name):
+        """
+        Returns a SLI specific application skillet found in the app_skillets folder
+        """
+        sli_path = Path(__file__).parent.joinpath("../app_skillets").resolve()
+        inline_sl = SkilletLoader(sli_path)
+        app_skillet: Skillet = inline_sl.get_skillet_with_name(skillet_name)
 
+        if not app_skillet:
+            raise AppSkilletNotFoundException("Could not find required resources")
+
+        return app_skillet
+
+    def _parse_args(self) -> Tuple[str, str]:
         # Any digit arguments should be converted to negative
+
         def fixup(x):
             return f"-{x}" if x.isdigit() else x
-
-        capture_var = None
 
         if len(self.args) == 1:
             latest_name = "running"
             source_name = fixup(self.args[0])
+
         elif len(self.args) == 2:
             source_name = fixup(self.args[0])
             latest_name = fixup(self.args[1])
+
         elif len(self.args) == 3:
             source_name = fixup(self.args[0])
             latest_name = fixup(self.args[1])
-            capture_var = self.args[2]
+            self.capture_var = self.args[2]
+
         elif len(self.args) > 3:
-            self._print_usage()
-            return
+
+            raise InvalidArgumentsException("Too many arguments")
+
         else:
             # If no arguments supplied, assume diff previous running vs running
             latest_name = "running"
             source_name = "-1"
 
-        previous_config = pan.get_configuration(config_source=source_name)
-        latest_config = pan.get_configuration(config_source=latest_name)
+        return source_name, latest_name
+
+    def _handle_diff(self, diff) -> None:
 
         output = ""
-        out_file = self.sli.options.get("out_file")
 
         if self.sli.output_format == "xml":
-            diff = pan.generate_skillet_from_configs(previous_config, latest_config)
             for obj in diff:
                 output += f'name: {obj["name"]}\n'
                 output += f'xpath: {obj["xpath"]}\n'
                 output += f'element: {obj["element"]}\n\n'
-            print(output)
 
         elif self.sli.output_format == "set":
-            diff = pan.generate_set_cli_from_configs(previous_config, latest_config)
             output = "\n".join(diff)
-            print(output)
 
         else:
-            # Skillet format
-            diff = pan.generate_skillet_from_configs(previous_config, latest_config)
-            template = Template(skillet_template)
-            generated_snippets = [{
-                    "xml": format_xml_string(x["element"], indent=6),
-                    "xpath": x["full_xpath"]
-                } for x in diff]
-            output = template.render({"snippets": generated_snippets})
-            print(output)
+            panos_skeleton = self._load_app_skillet("panos_skillet_skeleton")
 
-            # Update context if using context
-            if self.sli.cm.use_context and capture_var is not None:
-                self.sli.context[capture_var] = diff
-                print(f'Output added to context as {capture_var}')
+            skillet_output = panos_skeleton.execute({"snippets": diff})
 
+            if not panos_skeleton.success:
+                raise SLIException("Could not generate Skillet output")
+
+            output = skillet_output["template"]
+
+        self._handle_outfile(output)
+        print(output)
+
+    def _get_diffs(self, source_name, latest_name):
+        """
+        Internal method to actually perform the diff operation.
+        """
+
+        previous_config = self.pan.get_configuration(config_source=source_name)
+        latest_config = self.pan.get_configuration(config_source=latest_name)
+
+        if self.sli.output_format == "set":
+            diff = self.pan.generate_set_cli_from_configs(previous_config, latest_config)
+        else:
+            diff = self.pan.generate_skillet_from_configs(previous_config, latest_config)
+
+        return diff
+
+    def _handle_outfile(self, output):
+
+        out_file = self.sli.options.get("out_file")
         if output and out_file:
             with open(out_file, "w") as f:
                 f.write(output)
 
+    def _update_context(self, diff):
 
-skillet_template = """name: skillet_name
-label: skillet_label
-description: skillet_description
+        # Update context if using context
+        if self.sli.cm.use_context and self.capture_var is not None:
+            self.sli.context[self.capture_var] = diff
+            print(f"Output added to context as {self.capture_var}")
 
-type: panos
+    @require_ngfw_connection_params
+    @require_panoply_connection
+    def run(self, pan):
+        """Get a diff of running and candidate configs"""
 
-variables:
+        import pydevd_pycharm
 
-snippets:
-{% for s in snippets %}
-  - name: snippet_{{ loop.index }}
-    xpath: {{ s.xpath }}
-    element: |-
-{{ s.xml }}{% endfor %}
-"""
+        pydevd_pycharm.settrace("localhost", port=45443, stdoutToServer=True, stderrToServer=True)
+
+        self.pan = pan
+
+        try:
+            source_name, latest_name = self._parse_args()
+
+        except InvalidArgumentsException:
+            self._print_usage()
+            return
+
+        diff = self._get_diffs(source_name, latest_name)
+        self._update_context(diff)
+        self._handle_diff(diff)

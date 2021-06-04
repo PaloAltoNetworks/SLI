@@ -44,7 +44,7 @@ def require_config(func):
                 contents = f.read()
                 command.sli.context["config"] = contents
                 config = etree.fromstring(contents, parser).getroottree()
-        # No configuraiton file specified, connect to device
+        # No configuration file specified, connect to device
         else:
             ensure_ngfw_connection_params(command)
             pan = get_panoply_from_context(command)
