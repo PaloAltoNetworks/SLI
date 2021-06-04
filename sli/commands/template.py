@@ -38,6 +38,8 @@ class TemplateCommand(BaseCommand):
 
         snippets = self.sli.skillet.get_snippets()
         for snippet in snippets:
+            if not snippet.should_execute(self.sli.context):
+                continue
             file_path = os.path.sep.join([self.sli.skillet.path, snippet.file])
             with open(file_path, 'r') as f:
                 rendered = snippet.render(f.read(), self.sli.context)
