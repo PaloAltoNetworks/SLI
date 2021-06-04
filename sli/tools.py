@@ -11,6 +11,13 @@ import hashlib
 import binascii
 
 
+def hash_string(string):
+    """Hash a string with sha256 and return hex as a string"""
+    sha = hashlib.sha256()
+    sha.update(string.encode("utf-8"))
+    return binascii.hexlify(sha.digest()).decode()
+
+
 def hash_file_contents(file_path):
     """Hash a file with sha256 at file_path and return hex as a string"""
     sha = hashlib.sha256()
