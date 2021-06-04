@@ -10,6 +10,11 @@ class BaseCommand:
 
     def execute(self):
         """SLI starts here to call the run function"""
+
+        # Filter out all var=value arguments for context loading
+        self.raw_args = self.args
+        self.args = [x for x in self.args if "=" not in x]
+
         self.run()
         self._get_output()
 
