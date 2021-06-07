@@ -48,7 +48,7 @@ class PythonCommand(BaseCommand):
                 image_tag = "sli-py:" + hash_file_contents(reqs_file)[:15]
 
             # Build a new image if couldn't find one
-            if not docker_client.image_exists(image_tag):
+            if not docker_client.image_exists(image_tag) and not image_tag == DockerClient.base_image:
                 print(f"Building a new python image for {image_tag}")
                 dockerfile = Template(docker_template).render(tag=image_tag)
                 docker_client.add_build_file(dockerfile, "Dockerfile", is_str=True)
@@ -59,14 +59,15 @@ class PythonCommand(BaseCommand):
 
             # Build an execute a container using script from snippet
             print(f"Using image {image_tag}")
+            script_name = snippet.file
+            if "/" in script_name:
+                script_name = script_name.split("/")[-1]
             docker_client.clear_run_dir()
-            docker_client.add_run_rile(script_path)
-            breakpoint()
+            docker_client.add_run_file(script_path, script_name)
             print("Running container...")
             # Hash container name to ensure valid characters and exclusive execution
             container_name = hash_string(self.sli.skillet.name + "-" + snippet.name)[:15]
-            docker_client.run_ephemeral(image_tag, container_name, "C:/Users/amall/.sli/docker/run/", "python test.py")
-
-            exit()  # TODO: Delete before merging
+            logs = docker_client.run_ephemeral(image_tag, container_name, f"python {script_name}")
 
             # Capture outputs
+            snippet.capture_outputs(logs, "success")
