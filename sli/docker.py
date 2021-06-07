@@ -24,11 +24,12 @@ class DockerClient:
         self.docker_path = expandedHomePath(".sli/docker")
         self.build_path = expandedHomePath(".sli/docker/build")
         self.run_path = expandedHomePath(".sli/docker/run")
+        self.home_path = expandedHomePath(".sli/docker/home")
         self._setup_system()
         self.clear_build_dir()
 
     def _setup_system(self):
-        for d in self.docker_path, self.build_path, self.run_path:
+        for d in self.docker_path, self.build_path, self.run_path, self.home_path:
             if not os.path.exists(d):
                 os.mkdir(d)
 
@@ -37,6 +38,12 @@ class DockerClient:
 
     def clear_run_dir(self):
         self.clear_dir(self.run_path)
+
+    @staticmethod
+    def file_system_name(name):
+        """Convert a given name to be file system friendly"""
+        char_map = {":": "_"}
+        return "".join([char_map.get(x, x) for x in name])
 
     @staticmethod
     def clear_dir(target):
@@ -131,10 +138,17 @@ class DockerClient:
             return found[0]
         return None
 
+    def _setup_home_dir(self, dir_name):
+        """Ensure a given image tag has a home directory available, assumes dir_name is file system friendly"""
+        target_home = self.home_path + os.sep + dir_name
+        if not os.path.exists(target_home):
+            os.mkdir(target_home)
+        return target_home
+
     def run_ephemeral(self, tag, container_name, run_cmd):
-        """
-        Create an ephemeral container, execute, and remove container
-        """
+        """Create an ephemeral container, execute, and remove container"""
+
+        home_dir = self._setup_home_dir(self.file_system_name(tag))
 
         # If a contianer by a name we are using already exists, remove it
         found = self.get_container(container_name)
@@ -148,7 +162,8 @@ class DockerClient:
                 command=run_cmd,
                 volumes=["/app"],
                 host_config=self.client.create_host_config(binds=[
-                    f"{self.run_path}:/app"
+                    f"{self.run_path}:/app",
+                    f"{home_dir}:/root"
                 ])
             )
         container_id = container_obj.get("Id")
@@ -175,6 +190,7 @@ class DockerClient:
             print(f"Container error: {exit_code['Error']}")
             raise Exception(f"Container {container_id} returned exit code {exit_code}")
         print("Container ran successfully")
-        return self.client.logs(container_id).decode("utf-8")
 
+        logs = self.client.logs(container_id).decode("utf-8")
         self.client.remove_container(container_id, force=True)
+        return logs

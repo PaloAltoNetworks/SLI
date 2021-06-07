@@ -35,7 +35,7 @@ class PythonCommand(BaseCommand):
                 continue
 
             # Check if existing image hash exists
-            image_tag = docker_client.base_image
+            image_tag = docker_client.base_url
             script_path = Path(os.path.normpath(os.path.join(self.sli.skillet.path, snippet.file)))
             script_dir = script_path.parent.absolute()
             reqs_file = script_dir.joinpath("requirements.txt")
@@ -43,7 +43,7 @@ class PythonCommand(BaseCommand):
                 image_tag = "sli-py:" + hash_file_contents(reqs_file)[:15]
 
             # Build a new image if couldn't find one
-            if not docker_client.image_exists(image_tag) and not image_tag == docker_client.base_image:
+            if not docker_client.image_exists(image_tag) and not image_tag == docker_client.base_url:
                 print(f"Building a new python image for {image_tag}")
                 dockerfile = Template(docker_template).render(tag=image_tag)
                 docker_client.add_build_file(dockerfile, "Dockerfile", is_str=True)
@@ -66,3 +66,4 @@ class PythonCommand(BaseCommand):
 
             # Capture outputs
             snippet.capture_outputs(logs, "success")
+            self.sli.skillet.context.update(snippet.context)
