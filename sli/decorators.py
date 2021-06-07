@@ -4,6 +4,7 @@ from skilletlib.exceptions import TargetConnectionException
 from sli.tools import get_var
 from sli.ssh import SSHSession
 from lxml import etree
+from sli.docker import DockerClient
 
 
 def require_ngfw_connection_params(func):
@@ -157,3 +158,14 @@ def get_panoply_from_context(command):
     if not pan.connected:
         raise TargetConnectionException('Unable to connect to device')
     return pan
+
+
+def require_docker_client(func):
+    """Requires a connection to docker desktop, raises an exception if not connected"""
+
+    def wrap(command):
+        docker_client = DockerClient()
+        if not docker_client.connected:
+            raise Exception("Unable to connect to docker desktop. Please ensure it is installed and running")
+        return func(command, docker_client)
+    return wrap

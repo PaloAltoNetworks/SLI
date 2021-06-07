@@ -1,7 +1,7 @@
 from sli.decorators import load_variables
 from sli.decorators import require_single_skillet
 from sli.decorators import require_skillet_type
-from sli.docker import DockerClient
+from sli.decorators import require_docker_client
 from sli.tools import hash_file_contents, hash_string
 from .base import BaseCommand
 
@@ -26,21 +26,16 @@ class PythonCommand(BaseCommand):
     @require_single_skillet
     @require_skillet_type('python3')
     @load_variables
-    def run(self):
+    @require_docker_client
+    def run(self, docker_client):
 
         snippets = self.sli.skillet.get_snippets()
         for snippet in snippets:
             if not snippet.should_execute(self.sli.context):
                 continue
 
-            # Check connectivity
-            docker_client = DockerClient()
-            if not docker_client.connected:
-                print("Unable to connect to docker")
-                return
-
             # Check if existing image hash exists
-            image_tag = DockerClient.base_image
+            image_tag = docker_client.base_image
             script_path = Path(os.path.normpath(os.path.join(self.sli.skillet.path, snippet.file)))
             script_dir = script_path.parent.absolute()
             reqs_file = script_dir.joinpath("requirements.txt")
@@ -48,7 +43,7 @@ class PythonCommand(BaseCommand):
                 image_tag = "sli-py:" + hash_file_contents(reqs_file)[:15]
 
             # Build a new image if couldn't find one
-            if not docker_client.image_exists(image_tag) and not image_tag == DockerClient.base_image:
+            if not docker_client.image_exists(image_tag) and not image_tag == docker_client.base_image:
                 print(f"Building a new python image for {image_tag}")
                 dockerfile = Template(docker_template).render(tag=image_tag)
                 docker_client.add_build_file(dockerfile, "Dockerfile", is_str=True)
