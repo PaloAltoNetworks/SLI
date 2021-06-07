@@ -202,3 +202,11 @@ SLI can also provide a diff of the candidate and running config to provide an xp
  # This command gets the device credentials from the default context and runs a diff
 sli diff -uc
 ```
+```
+# This command gets the device credentials from the default context, runs a diff and outputs the resulting diff in skillet format to the given filename.
+sli diff -uc -o out.skillet.yaml -of skillet
+```
+```
+# This command gets the device credentials from the default context, runs a diff and outputs the config diff between the running and candidate versions of your NGFW. The outputted diff is in set command format.
+sli diff -uc -of set running candidate 
+```
