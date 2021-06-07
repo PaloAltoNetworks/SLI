@@ -75,8 +75,19 @@ class DiffCommand(BaseCommand):
             latest_name = "running"
             source_name = "-1"
 
-        previous_config = pan.get_configuration(config_source=source_name)
-        latest_config = pan.get_configuration(config_source=latest_name)
+        device_configs = ["running", "candidate", "baseline"]  # Can be pulled off of device by name not file
+
+        previous_config = ""
+        if source_name in device_configs or source_name.replace("-", "").isdigit():
+            previous_config = pan.get_configuration(config_source=source_name)
+        else:
+            previous_config = pan.get_saved_configuration(source_name)
+
+        latest_config = ""
+        if latest_name in device_configs or source_name.replace("-", "").isdigit():
+            latest_config = pan.get_configuration(config_source=latest_name)
+        else:
+            latest_config = pan.get_saved_configuration(latest_name)
 
         output = ""
         out_file = self.sli.options.get("out_file")
