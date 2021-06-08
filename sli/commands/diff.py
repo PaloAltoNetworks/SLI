@@ -159,10 +159,6 @@ class DiffCommand(BaseCommand):
     def run(self, pan):
         """Get a diff of running and candidate configs"""
 
-        import pydevd_pycharm
-
-        pydevd_pycharm.settrace("localhost", port=45443, stdoutToServer=True, stderrToServer=True)
-
         self.pan = pan
 
         try:
@@ -172,6 +168,11 @@ class DiffCommand(BaseCommand):
             self._print_usage()
             return
 
-        diff = self._get_diffs(source_name, latest_name)
-        self._update_context(diff)
-        self._handle_diff(diff)
+        try:
+            diff = self._get_diffs(source_name, latest_name)
+            self._update_context(diff)
+            self._handle_diff(diff)
+
+        except SLIException as sle:
+            print(sle)
+            exit(1)

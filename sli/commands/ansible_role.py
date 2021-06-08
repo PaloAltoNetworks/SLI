@@ -1,16 +1,11 @@
 import os
 from pathlib import Path
-from typing import Tuple
 
 import yaml
-from git import Git
 from git import Repo
+from skilletlib import Skillet
+from skilletlib import SkilletLoader
 
-from .base import BaseCommand
-from sli.decorators import require_ngfw_connection_params, require_panoply_connection
-
-from jinja2 import Template
-from sli.tools import format_xml_string
 from .diff import DiffCommand
 from ..errors import InvalidArgumentsException
 from ..errors import SLIException
@@ -25,12 +20,11 @@ class AnsibleRoleCommand(DiffCommand):
     no_skillet = True
     repo_url = "https://gitlab.com/panw-gse/as/pan_community-ansible-collection-skeleton.git"
     help_text = """
-        ansible_role module requires 0 to 3 arguments.
+        ansible_role module requires 0 to 2 arguments.
 
         - 0 arguments: Diff running config from previous running config
         - 1 argument: Diff previous config or named config against specified running config
         - 2 arguments: Diff first arg named config against second arg named config
-        - 3 arguments: Diff first arg named config against second arg named config and save diffs into the context
 
         A named config can be either a stored config, candidate, running or a number.
         Positive numbers must be used to specify iterations, 1 means 1 config revision ago
@@ -53,34 +47,63 @@ class AnsibleRoleCommand(DiffCommand):
             user$ sli ansible_role 3 2 -uc -od /tmp/roles
     """
 
-    # def _parse_args(self) -> Tuple[str, str]:
-    #
-    #     if self.sli.options.get("output_directory") is None:
-    #         raise InvalidArgumentsException('You must specify an output directory for this command!')
-    #
-    #     return super()._parse_args()
-
     @staticmethod
     def __write_file_to_location(file_path_root: Path, file_name: str, file_contents: str) -> None:
+        """
+        utility method to ensure a path exists and write the file_contents into file_name at file_path_root
+
+        :param file_path_root: directory in which to check for the existence of file_name
+        :param file_name: name of the file to write
+        :param file_contents: string contents of the file to write
+        :return: None
+        """
 
         file_path = file_path_root.joinpath(file_name).resolve()
 
         if not file_path_root.exists():
             raise SLIException("Could not write file!")
 
-        with file_path.open(mode="w") as fp:
-            fp.write(file_contents)
+        try:
+            with file_path.open(mode="w") as fp:
+                fp.write(file_contents)
+        except OSError as oe:
+            raise SLIException(f"Could not write file! {oe}")
 
     @staticmethod
     def __get_input(var_label: str, var_default: str) -> str:
+        """
+        utility method to get input from the user and return the default value if nothing is entered from the user
+
+        :param var_label: Label to show to the user
+        :param var_default: default to use if nothing is entered
+        :return: value entered from the user or default is input is None or ""
+        """
         val = input(f"{var_label} <{var_default}>: ")
         if val is None or val == "":
             val = var_default
 
         return val
 
-    def _handle_diff(self, diff) -> None:
+    @staticmethod
+    def _load_skillet(skillet_name: str, source_dir: Path) -> Skillet:
+        """
+        Returns a skillet found in the source_dir folder
+        """
+        inline_sl = SkilletLoader(source_dir)
+        app_skillet: Skillet = inline_sl.get_skillet_with_name(skillet_name)
 
+        if not app_skillet:
+            raise SLIException("Could not find required resources")
+
+        return app_skillet
+
+    def _handle_diff(self, diff: list) -> None:
+        """
+         override method to perform action on the list of diffs. In this case, build the ansible role structure
+
+        :param diff: list of differences found from Skilletlib
+        :return: None
+        """
         if not len(diff):
             print("No Configuration diffs found! Try a different combination of configuration sources")
             exit(1)
@@ -90,12 +113,13 @@ class AnsibleRoleCommand(DiffCommand):
         description = self.__get_input("Role Description", "generated_role")
         author_name = self.__get_input("Author Name", "john doe")
 
-        output_dir: str = self.sli.options.get("output_directory")
+        # verify output dir structure and existence
+        output_dir: str = self.sli.options.get("output_directory", None)
 
         if output_dir is None:
             output_dir = "./ansible_collections"
 
-        if output_dir.startswith("./"):
+        if str(output_dir).startswith("./"):
             output_path = Path(os.getcwd()).joinpath(output_dir).resolve()
         else:
             output_path = Path(output_dir)
@@ -104,8 +128,12 @@ class AnsibleRoleCommand(DiffCommand):
 
         if output_dir != "ansible_collections":
             output_path = output_path.joinpath("ansible_collections")
-            output_path.mkdir()
+            output_path.mkdir(parents=True, exist_ok=True)
 
+        if next(os.scandir(output_path), None):
+            raise SLIException(f"Ansible Roles Directory: {output_path} must be empty!")
+
+        # clone out skeleton repo
         Repo.clone_from(self.repo_url, output_path)
 
         # rename the directory structure appropriately
@@ -130,8 +158,28 @@ class AnsibleRoleCommand(DiffCommand):
         role_path = skeleton_role_path.parent.joinpath(role_name)
         skeleton_role_path.rename(role_path)
 
+        # create our inline skilletloader instance
+        inline_sl = SkilletLoader(output_path)
+
+        # create README
+        readme_skillet = inline_sl.get_skillet_with_name('readme_template')
+        readme_outout = readme_skillet.execute(
+            {"role_name": role_name, "description": description, "author_name": author_name, "namespace": namespace}
+        )
+
+        self.__write_file_to_location(output_path, "README.md", readme_outout["template"])
+        self.__write_file_to_location(collection_path, "README.md", readme_outout["template"])
+
+        # create Role README
+        role_readme_skillet = inline_sl.get_skillet_with_name('readme_template')
+        role_readme_outout = role_readme_skillet.execute(
+            {"role_name": role_name, "description": description, "author_name": author_name, "namespace": namespace}
+        )
+
+        self.__write_file_to_location(role_path, "README.md", role_readme_outout["template"])
+
         # write out galaxy.yml file from template
-        galaxy_skillet = self._load_app_skillet("ansible_galaxy_template")
+        galaxy_skillet = inline_sl.get_skillet_with_name("ansible_galaxy_template")
 
         output = galaxy_skillet.execute(
             {"role_name": role_name, "description": description, "author_name": author_name}
@@ -148,7 +196,7 @@ class AnsibleRoleCommand(DiffCommand):
 
         # create role vars file
         vars_file_data = dict()
-        vars_file_data["supported_version"] = supported_versions
+        vars_file_data["supported_versions"] = supported_versions
         supported_versions_yaml = yaml.safe_dump(vars_file_data)
 
         role_vars_path = role_path.joinpath("vars")
@@ -156,31 +204,24 @@ class AnsibleRoleCommand(DiffCommand):
 
         # create version specific task file
         role_tasks_path = role_path.joinpath("tasks")
-        ansible_task_template = self._load_app_skillet("ansible_task_template")
+        ansible_task_template = inline_sl.get_skillet_with_name("ansible_task_template")
         task_output = ansible_task_template.execute({"snippets": diff})
         self.__write_file_to_location(role_tasks_path, f"panos-{major_version}.yml", task_output["template"])
 
+        # create role meta file
+        role_meta_path = role_path.joinpath("meta")
+        ansible_task_meta_template = inline_sl.get_skillet_with_name("ansible_task_meta_template")
+        task_output = ansible_task_meta_template.execute(
+            {"role_name": role_name, "description": description, "author_name": author_name}
+        )
+        self.__write_file_to_location(role_meta_path, "main.yml", task_output["template"])
+
+        # create role test file
+        role_test_path = role_path.joinpath("tests")
+        ansible_test_template = inline_sl.get_skillet_with_name("ansible_test_template")
+        task_output = ansible_test_template.execute(
+            {"role_name": role_name}
+        )
+        self.__write_file_to_location(role_test_path, "test.yml", task_output["template"])
+
         print(f"Ansible Role created in {output_path} successfully!")
-
-    @require_ngfw_connection_params
-    @require_panoply_connection
-    def run(self, pan):
-        """Get a diff of running and candidate configs"""
-
-        import pydevd_pycharm
-
-        pydevd_pycharm.settrace("localhost", port=45443, stdoutToServer=True, stderrToServer=True, suspend=False)
-
-        self.pan = pan
-
-        try:
-            source_name, latest_name = self._parse_args()
-
-        except InvalidArgumentsException as iae:
-            self._print_usage()
-            print(f"Error: {iae}")
-            return
-
-        diff = self._get_diffs(source_name, latest_name)
-        self._update_context(diff)
-        self._handle_diff(diff)
