@@ -24,7 +24,9 @@ class ProgressBar:
         self.clock = clock
         self.fill = fill
         self.start_time = time.time()
-        self.update(0)
+        self.percent = 0
+        self.update(self.percent)
+        self.bar = None
 
     def _get_time(self):
         if not self.clock:
@@ -36,13 +38,19 @@ class ProgressBar:
 
     def update(self, percent):
         """After instantiation, call this to report a new percentage update"""
+        self.percent = percent
         filledLength = floor(self.length * (float(percent) / 100))
-        bar = self.fill * filledLength + '-' * (self.length - filledLength)
+        self.bar = self.fill * filledLength + '-' * (self.length - filledLength)
         time_string = self._get_time()
-        print(f'\r{self.prefix} |{bar}| {percent}% {time_string}', end="\r")
+        print(f'\r{self.prefix} |{self.bar}| {percent}% {time_string}', end="\r")
 
     def complete(self):
         """Call this when the target workload is complete to display 100%"""
-        bar = self.fill * self.length
+        self.bar = self.fill * self.length
         time_string = self._get_time()
-        print(f'\r{self.prefix} |{bar}| Complete {time_string}\n')
+        print(f'\r{self.prefix} |{self.bar}| Complete {time_string}\n')
+
+    def pause(self):
+        """Call this to pause a progress bar and get a new line"""
+        time_string = self._get_time()
+        print(f'\r{self.prefix} |{self.bar}| Paused {self.percent}% {time_string}')
