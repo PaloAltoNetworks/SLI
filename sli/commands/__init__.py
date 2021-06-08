@@ -11,7 +11,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # Load all command modules from this package
 
 package_dir = Path(__file__).resolve().parent
-for (_, module_name, _) in iter_modules([package_dir]):
+for (_, module_name, _) in iter_modules([str(package_dir)]):
 
     # Load each module individually
     module = import_module(f"{__name__}.{module_name}")
