@@ -79,3 +79,25 @@ class SSHSession:
                 self.error_text = total_received
                 return False
         return True
+
+    def extended_set_command(self, cmd, expect="[edit]", error_expect=None):
+        """Extended version of set_command to expect a given non-typical prompt from the NGFW"""
+
+        if not self.mode == "config":
+            raise Exception("SLI SSH extended_set_command called not from config mode")
+
+        self.channel.send(f"{cmd}\n")
+        total_received = ""
+        received = ""
+
+        # Scan the output until expected text is found
+        while expect not in total_received:
+            received = self.channel.recv(self.BUFFER_LEN).decode()
+            if self.echo:
+                print(received)
+            total_received += received
+            if error_expect:
+                if error_expect in total_received:
+                    self.error_text = total_received
+                    return False
+        return True

@@ -465,3 +465,18 @@ def format_xml_string(xml, indent=0):
     temp_file.seek(0)
     formatted_xml = temp_file.read().decode()
     return "\n".join([" " * indent + x for x in formatted_xml.split("\n")])
+
+
+def get_password_input(prompt):
+    """Get a password input and confirm it, returning the password"""
+    match = False
+    password = ""
+    while not match:
+        password = getpass(prompt + ": ")
+        confirm = getpass(prompt + " - confirm: ")
+        match = password == confirm and len(password) > 7
+        if not password == confirm:
+            print("Passwords did not match, please try again")
+        if len(password) < 8:
+            print("Password must be 8 characters")
+    return password
