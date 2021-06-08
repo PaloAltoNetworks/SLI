@@ -145,7 +145,7 @@ class DockerClient:
             os.mkdir(target_home)
         return target_home
 
-    def run_ephemeral(self, tag, container_name, run_cmd):
+    def run_ephemeral(self, tag, container_name, run_cmd, env=None):
         """Create an ephemeral container, execute, and remove container"""
 
         home_dir = self._setup_home_dir(self.file_system_name(tag))
@@ -161,6 +161,7 @@ class DockerClient:
                 name=container_name,
                 command=run_cmd,
                 volumes=["/app"],
+                environment=env,
                 host_config=self.client.create_host_config(binds=[
                     f"{self.run_path}:/app",
                     f"{home_dir}:/root"

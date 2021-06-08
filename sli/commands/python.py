@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 from jinja2 import Template
 
-docker_template = """FROM registry.gitlab.com/panw-gse/as/as-py-base-image:latest
+docker_template = """FROM {{ base_image }}
 LABEL description="{{ tag }}"
 
 WORKDIR /app
@@ -45,7 +45,7 @@ class PythonCommand(BaseCommand):
             # Build a new image if couldn't find one
             if not docker_client.image_exists(image_tag) and not image_tag == docker_client.base_url:
                 print(f"Building a new python image for {image_tag}")
-                dockerfile = Template(docker_template).render(tag=image_tag)
+                dockerfile = Template(docker_template).render(tag=image_tag, base_image=docker_client.base_url)
                 docker_client.add_build_file(dockerfile, "Dockerfile", is_str=True)
                 docker_client.add_build_file(reqs_file, "requirements.txt")
                 if not docker_client.build_image(image_tag):
@@ -53,6 +53,9 @@ class PythonCommand(BaseCommand):
                 docker_client.clear_build_dir()
 
             # Build an execute a container using script from snippet
+            env = None
+            if snippet.metadata.get("input_type") == "env":
+                env = self.sli.context
             print(f"Using image {image_tag}")
             script_name = snippet.file
             if "/" in script_name:
@@ -62,7 +65,7 @@ class PythonCommand(BaseCommand):
             print("Running container...")
             # Hash container name to ensure valid characters and exclusive execution
             container_name = hash_string(self.sli.skillet.name + "-" + snippet.name)[:15]
-            logs = docker_client.run_ephemeral(image_tag, container_name, f"python {script_name}")
+            logs = docker_client.run_ephemeral(image_tag, container_name, f"python {script_name}", env=env)
 
             # Capture outputs
             snippet.capture_outputs(logs, "success")
