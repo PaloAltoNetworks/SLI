@@ -79,7 +79,7 @@ def load_variables(func):
         if command.sli.options.get("defaults") is True:
             print("Specified accept defaults. Skipping user prompts with default options...")
         for var in command.sli.skillet.variables:
-            get_var(var, command.args, command.sli.context, options=command.sli.options)
+            get_var(var, command.raw_args, command.sli.context, options=command.sli.options)
         if len(command.sli.skillet.variables) and command.sli.options.get("defaults") is not True:
             print("End of user variables.")
         return func(command)

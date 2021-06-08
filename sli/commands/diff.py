@@ -100,7 +100,6 @@ class DiffCommand(BaseCommand):
         return source_name, latest_name
 
     def _handle_diff(self, diff) -> None:
-
         output = ""
 
         if self.sli.output_format == "xml":
@@ -130,9 +129,17 @@ class DiffCommand(BaseCommand):
         Internal method to actually perform the diff operation.
         """
 
-        previous_config = self.pan.get_configuration(config_source=source_name)
-        latest_config = self.pan.get_configuration(config_source=latest_name)
+        device_configs = ["running", "candidate", "baseline"]  # Can be pulled off of device by name not file
 
+        if source_name in device_configs or source_name.replace("-", "").isdigit():
+            previous_config = self.pan.get_configuration(config_source=source_name)
+        else:
+            previous_config = self.pan.get_saved_configuration(source_name)
+
+        if latest_name in device_configs or source_name.replace("-", "").isdigit():
+            latest_config = self.pan.get_configuration(config_source=latest_name)
+        else:
+            latest_config = self.pan.get_saved_configuration(latest_name)
         if self.sli.output_format == "set":
             diff = self.pan.generate_set_cli_from_configs(previous_config, latest_config)
         else:
