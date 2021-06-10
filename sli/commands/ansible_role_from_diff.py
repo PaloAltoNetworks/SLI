@@ -69,20 +69,6 @@ class AnsibleRoleCommand(DiffCommand):
         except OSError as oe:
             raise SLIException(f"Could not write file! {oe}")
 
-    @staticmethod
-    def __get_input(var_label: str, var_default: str) -> str:
-        """
-        utility method to get input from the user and return the default value if nothing is entered from the user
-
-        :param var_label: Label to show to the user
-        :param var_default: default to use if nothing is entered
-        :return: value entered from the user or default is input is None or ""
-        """
-        val = input(f"{var_label} <{var_default}>: ")
-        if val is None or val == "":
-            val = var_default
-
-        return val
 
     @staticmethod
     def _load_skillet(skillet_name: str, source_dir: Path) -> Skillet:
@@ -97,21 +83,37 @@ class AnsibleRoleCommand(DiffCommand):
 
         return app_skillet
 
-    def _handle_diff(self, diff: list) -> None:
+    def _get_vars(self) -> list:
+        """
+        Return a list of a single variable to populate the test, readme, and variable_list files
+        """
+        return [
+            {"name": "custom_variable", "description": "Custom Variable", "default": "default_value", "type_hint": "text"}
+        ]
+
+    def _get_version(self) -> str:
+        return self.pan.facts["sw-version"]
+
+    def _handle_snippets(self, snippets: list, variable_list: list) -> None:
         """
          override method to perform action on the list of diffs. In this case, build the ansible role structure
 
-        :param diff: list of differences found from Skilletlib
+        :param snippets: list of differences found from Skilletlib
+        "param variable_list: list of variables as found in the snippets
         :return: None
         """
-        if not len(diff):
+        if not len(snippets):
             print("No Configuration diffs found! Try a different combination of configuration sources")
             exit(1)
 
-        namespace = self.__get_input("Namespace", "pan_community")
-        role_name = self.__get_input("Role Name", "generated_role")
-        description = self.__get_input("Role Description", "generated_role")
-        author_name = self.__get_input("Author Name", "john doe")
+        namespace = self._get_input("Namespace", "pan_community")
+        role_name = self._get_input("Role Name", "generated_role")
+        description = self._get_input("Role Description", "generated_role")
+        author_name = self._get_input("Author Name", "john doe")
+
+        # get version and major version from connected NGFW
+        version = self._get_version()
+        major_version = ".".join(version.split(".")[0:2])
 
         # verify output dir structure and existence
         output_dir: str = self.sli.options.get("output_directory", None)
@@ -162,18 +164,30 @@ class AnsibleRoleCommand(DiffCommand):
         inline_sl = SkilletLoader(output_path)
 
         # create README
-        readme_skillet = inline_sl.get_skillet_with_name('readme_template')
+        readme_skillet = inline_sl.get_skillet_with_name("readme_template")
         readme_outout = readme_skillet.execute(
-            {"role_name": role_name, "description": description, "author_name": author_name, "namespace": namespace}
+            {
+                "role_name": role_name,
+                "description": description,
+                "author_name": author_name,
+                "namespace": namespace,
+                "variable_list": variable_list,
+            }
         )
 
         self.__write_file_to_location(output_path, "README.md", readme_outout["template"])
         self.__write_file_to_location(collection_path, "README.md", readme_outout["template"])
 
         # create Role README
-        role_readme_skillet = inline_sl.get_skillet_with_name('readme_template')
+        role_readme_skillet = inline_sl.get_skillet_with_name("role_readme_template")
         role_readme_outout = role_readme_skillet.execute(
-            {"role_name": role_name, "description": description, "author_name": author_name, "namespace": namespace}
+            {
+                "role_name": role_name,
+                "description": description,
+                "author_name": author_name,
+                "namespace": namespace,
+                "variable_list": variable_list,
+            }
         )
 
         self.__write_file_to_location(role_path, "README.md", role_readme_outout["template"])
@@ -186,10 +200,6 @@ class AnsibleRoleCommand(DiffCommand):
         )
 
         self.__write_file_to_location(collection_path, "galaxy.yml", output["template"])
-
-        # get version and major version from connected NGFW
-        version = self.pan.facts["sw-version"]
-        major_version = ".".join(version.split(".")[0:2])
 
         # add major version to supported_versions list
         supported_versions = [major_version]
@@ -205,23 +215,21 @@ class AnsibleRoleCommand(DiffCommand):
         # create version specific task file
         role_tasks_path = role_path.joinpath("tasks")
         ansible_task_template = inline_sl.get_skillet_with_name("ansible_task_template")
-        task_output = ansible_task_template.execute({"snippets": diff})
+        task_output = ansible_task_template.execute({"snippets": snippets})
         self.__write_file_to_location(role_tasks_path, f"panos-{major_version}.yml", task_output["template"])
 
         # create role meta file
         role_meta_path = role_path.joinpath("meta")
         ansible_task_meta_template = inline_sl.get_skillet_with_name("ansible_task_meta_template")
         task_output = ansible_task_meta_template.execute(
-            {"role_name": role_name, "description": description, "author_name": author_name}
+            {"role_name": role_name, "description": description, "author_name": author_name, "variable_list": variable_list}
         )
         self.__write_file_to_location(role_meta_path, "main.yml", task_output["template"])
 
         # create role test file
         role_test_path = role_path.joinpath("tests")
         ansible_test_template = inline_sl.get_skillet_with_name("ansible_test_template")
-        task_output = ansible_test_template.execute(
-            {"role_name": role_name}
-        )
+        task_output = ansible_test_template.execute({"role_name": role_name, "variable_list": variable_list})
         self.__write_file_to_location(role_test_path, "test.yml", task_output["template"])
 
         print(f"Ansible Role created in {output_path} successfully!")

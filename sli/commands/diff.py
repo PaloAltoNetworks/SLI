@@ -69,8 +69,10 @@ class DiffCommand(BaseCommand):
 
         return app_skillet
 
-    def _parse_args(self) -> Tuple[str, str]:
-        # Any digit arguments should be converted to negative
+    def _parse_args(self) -> None:
+        """
+        handle arguments for this Command.
+        """
 
         def fixup(x):
             return f"-{x}" if x.isdigit() else x
@@ -97,24 +99,41 @@ class DiffCommand(BaseCommand):
             latest_name = "running"
             source_name = "-1"
 
-        return source_name, latest_name
+        self.source_name = source_name
+        self.latest_name = latest_name
 
-    def _handle_diff(self, diff) -> None:
+    @staticmethod
+    def _get_input(var_label: str, var_default: str) -> str:
+        """
+        utility method to get input from the user and return the default value if nothing is entered from the user
+
+        :param var_label: Label to show to the user
+        :param var_default: default to use if nothing is entered
+        :return: value entered from the user or default is input is None or ""
+        """
+        val = input(f"{var_label} <{var_default}>: ")
+        if val is None or val == "":
+            val = var_default
+
+        return val
+
+    def _handle_snippets(self, snippets: list, vars: list) -> None:
         output = ""
 
         if self.sli.output_format == "xml":
-            for obj in diff:
+            for obj in snippets:
                 output += f'name: {obj["name"]}\n'
                 output += f'xpath: {obj["xpath"]}\n'
                 output += f'element: {obj["element"]}\n\n'
 
         elif self.sli.output_format == "set":
-            output = "\n".join(diff)
+            output = "\n".join(snippets)
 
         else:
             panos_skeleton = self._load_app_skillet("panos_skillet_skeleton")
 
-            skillet_output = panos_skeleton.execute({"snippets": diff})
+            skillet_name = self._get_input('Skillet Name:', 'my skillet')
+            skillet_output = panos_skeleton.execute({"snippets": snippets, 'skillet_name': skillet_name})
 
             if not panos_skeleton.success:
                 raise SLIException("Could not generate Skillet output")
@@ -124,10 +143,16 @@ class DiffCommand(BaseCommand):
         self._handle_outfile(output)
         print(output)
 
-    def _get_diffs(self, source_name, latest_name):
+    def _get_vars(self) -> list:
+        return []
+
+    def _get_snippets(self) -> list:
         """
         Internal method to actually perform the diff operation.
         """
+
+        source_name = self.source_name
+        latest_name = self.latest_name
 
         device_configs = ["running", "candidate", "baseline"]  # Can be pulled off of device by name not file
 
@@ -141,20 +166,20 @@ class DiffCommand(BaseCommand):
         else:
             latest_config = self.pan.get_saved_configuration(latest_name)
         if self.sli.output_format == "set":
-            diff = self.pan.generate_set_cli_from_configs(previous_config, latest_config)
+            snippets = self.pan.generate_set_cli_from_configs(previous_config, latest_config)
         else:
-            diff = self.pan.generate_skillet_from_configs(previous_config, latest_config)
+            snippets = self.pan.generate_skillet_from_configs(previous_config, latest_config)
 
-        return diff
+        return snippets
 
-    def _handle_outfile(self, output):
+    def _handle_outfile(self, output: str) -> None:
 
         out_file = self.sli.options.get("out_file")
         if output and out_file:
             with open(out_file, "w") as f:
                 f.write(output)
 
-    def _update_context(self, diff):
+    def _update_context(self, diff: list) -> None:
 
         # Update context if using context
         if self.sli.cm.use_context and self.capture_var is not None:
@@ -169,16 +194,17 @@ class DiffCommand(BaseCommand):
         self.pan = pan
 
         try:
-            source_name, latest_name = self._parse_args()
+            self._parse_args()
 
         except InvalidArgumentsException:
             self._print_usage()
             return
 
         try:
-            diff = self._get_diffs(source_name, latest_name)
+            diff = self._get_snippets()
+            vars_list = self._get_vars()
             self._update_context(diff)
-            self._handle_diff(diff)
+            self._handle_snippets(diff, vars_list)
 
         except SLIException as sle:
             print(sle)
