@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Tuple
 
 from skilletlib import Skillet
 from skilletlib import SkilletLoader
@@ -132,8 +131,8 @@ class DiffCommand(BaseCommand):
         else:
             panos_skeleton = self._load_app_skillet("panos_skillet_skeleton")
 
-            skillet_name = self._get_input('Skillet Name:', 'my skillet')
-            skillet_output = panos_skeleton.execute({"snippets": snippets, 'skillet_name': skillet_name})
+            skillet_name = self._get_input("Skillet Name:", "my skillet")
+            skillet_output = panos_skeleton.execute({"snippets": snippets, "skillet_name": skillet_name})
 
             if not panos_skeleton.success:
                 raise SLIException("Could not generate Skillet output")

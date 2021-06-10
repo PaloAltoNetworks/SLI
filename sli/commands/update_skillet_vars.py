@@ -1,16 +1,12 @@
 from skilletlib import Skillet
 
 from .base import BaseCommand
-import yaml
-
-from skilletlib.skillet.panos import PanosSkillet
-
 from ..decorators import require_single_skillet
 
 
 class ShowSkillet(BaseCommand):
-    sli_command = 'update_skillet_vars'
-    short_desc = 'Finds and updates all template variables in a Skillet'
+    sli_command = "update_skillet_vars"
+    short_desc = "Finds and updates all template variables in a Skillet"
     no_skillet = False
     no_context = True
     help_text = """
@@ -30,14 +26,9 @@ class ShowSkillet(BaseCommand):
 
         for v in found_variables:
             if v not in [x["name"] for x in skillet.variables]:
-                print(f'Found new variable {v}')
+                print(f"Found new variable {v}")
 
-                new_variable = {
-                    "name": v,
-                    "description": v,
-                    "default": "",
-                    "type_hint": "text"
-                }
+                new_variable = {"name": v, "description": v, "default": "", "type_hint": "text"}
 
                 skillet.variables.append(new_variable)
 

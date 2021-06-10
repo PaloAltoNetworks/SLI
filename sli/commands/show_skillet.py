@@ -1,14 +1,11 @@
 from .base import BaseCommand
-import yaml
-
-from skilletlib.skillet.panos import PanosSkillet
 
 from ..decorators import require_single_skillet
 
 
 class ShowSkillet(BaseCommand):
-    sli_command = 'show_skillet'
-    short_desc = 'Shows the contents of a Compiled Skillet in YAML format'
+    sli_command = "show_skillet"
+    short_desc = "Shows the contents of a Compiled Skillet in YAML format"
     no_skillet = False
     no_context = True
     help_text = """

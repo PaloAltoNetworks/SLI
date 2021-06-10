@@ -41,7 +41,7 @@ class SkilletToAnsibleRoleCommand(AnsibleRoleCommand):
         """
         Sadly, we can't get this directly from the loaded skillet programmatically...
         """
-        return self._get_input('PAN-OS Version to target', '10.0')
+        return self._get_input("PAN-OS Version to target", "10.0")
 
     @require_single_skillet
     @require_skillet_type("panos", "panorama")

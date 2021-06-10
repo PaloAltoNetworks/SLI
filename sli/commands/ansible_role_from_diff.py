@@ -69,7 +69,6 @@ class AnsibleRoleCommand(DiffCommand):
         except OSError as oe:
             raise SLIException(f"Could not write file! {oe}")
 
-
     @staticmethod
     def _load_skillet(skillet_name: str, source_dir: Path) -> Skillet:
         """
@@ -88,7 +87,12 @@ class AnsibleRoleCommand(DiffCommand):
         Return a list of a single variable to populate the test, readme, and variable_list files
         """
         return [
-            {"name": "custom_variable", "description": "Custom Variable", "default": "default_value", "type_hint": "text"}
+            {
+                "name": "custom_variable",
+                "description": "Custom Variable",
+                "default": "default_value",
+                "type_hint": "text",
+            }
         ]
 
     def _get_version(self) -> str:
@@ -222,7 +226,12 @@ class AnsibleRoleCommand(DiffCommand):
         role_meta_path = role_path.joinpath("meta")
         ansible_task_meta_template = inline_sl.get_skillet_with_name("ansible_task_meta_template")
         task_output = ansible_task_meta_template.execute(
-            {"role_name": role_name, "description": description, "author_name": author_name, "variable_list": variable_list}
+            {
+                "role_name": role_name,
+                "description": description,
+                "author_name": author_name,
+                "variable_list": variable_list,
+            }
         )
         self.__write_file_to_location(role_meta_path, "main.yml", task_output["template"])
 
