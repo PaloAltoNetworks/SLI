@@ -71,8 +71,6 @@ class FormatHelp(click.Command):
 @click.argument("action", nargs=1, default="execute")
 @click.pass_context
 def cli(ctx, action, **kwargs):
-    import pydevd_pycharm
-    pydevd_pycharm.settrace('localhost', port=45443, stdoutToServer=True, stderrToServer=True, suspend=False)
 
     options = {key: kwargs[key] for key in kwargs if kwargs[key] is not None}
     sli = SkilletLineInterface(options, action, ctx.args)
