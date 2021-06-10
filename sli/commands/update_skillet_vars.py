@@ -14,7 +14,7 @@ class ShowSkillet(BaseCommand):
     This command is useful when building or modifying an existing skillet. You can edit the
     XML elements or other templated attributes with Jinja {{ variables }} then run this command
     to update the list of variables with your new additions.
-    
+
     Usage:
         sli update_skillet_vars --name k12_config_skillet -sd /tmp/skillets
     """
