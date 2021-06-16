@@ -3,6 +3,7 @@ from pathlib import Path
 from pkgutil import iter_modules
 from inspect import isclass
 from importlib import import_module
+from sli.skilletPatch import patch_snippets
 
 # Disable SSL warning
 import urllib3
@@ -27,3 +28,6 @@ for (_, module_name, _) in iter_modules([str(package_dir)]):
             if not issubclass(attr, BaseCommand):
                 raise ImportError(f'Command module {attr} must subclass BaseCommand')
             globals()[attr_name] = attr
+
+# Add in SLI specific snippet functions
+patch_snippets()
