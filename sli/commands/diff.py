@@ -2,7 +2,7 @@ from .base import BaseCommand
 from sli.decorators import require_ngfw_connection_params, require_panoply_connection
 
 from jinja2 import Template
-from sli.tools import format_xml_string
+from sli.tools import format_xml_string, load_config_file
 
 
 class DiffCommand(BaseCommand):
@@ -17,7 +17,7 @@ class DiffCommand(BaseCommand):
         - 2 arguments: Diff first arg named config against second arg named config
         - 3 arguments: Diff first arg named config against second arg named config and save diffs into the context
 
-        A named config can be either a stored config, candidate, running or a number.
+        A named config can be either a stored config, candidate, running, a number, or a local file.
         Positive numbers must be used to specify iterations, 1 means 1 config revision ago
 
         Example: Get diff between running config and previous running config in set cli format
@@ -44,6 +44,11 @@ class DiffCommand(BaseCommand):
         Example: Get a diff and save as 'candidate_diff' into the context
 
             user$ sli diff running candidate candidate_diff -uc
+
+        Example: Get a diff from running and a local config file, save as out.xml
+
+            user$ sli diff running file:test-file.xml candidate_diff -uc -o out.xml
+
     """
 
     @require_ngfw_connection_params
@@ -75,19 +80,8 @@ class DiffCommand(BaseCommand):
             latest_name = "running"
             source_name = "-1"
 
-        device_configs = ["running", "candidate", "baseline"]  # Can be pulled off of device by name not file
-
-        previous_config = ""
-        if source_name in device_configs or source_name.replace("-", "").isdigit():
-            previous_config = pan.get_configuration(config_source=source_name)
-        else:
-            previous_config = pan.get_saved_configuration(source_name)
-
-        latest_config = ""
-        if latest_name in device_configs or source_name.replace("-", "").isdigit():
-            latest_config = pan.get_configuration(config_source=latest_name)
-        else:
-            latest_config = pan.get_saved_configuration(latest_name)
+        previous_config = load_config_file(source_name, pan)
+        latest_config = load_config_file(latest_name, pan)
 
         output = ""
         out_file = self.sli.options.get("out_file")
