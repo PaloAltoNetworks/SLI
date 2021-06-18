@@ -105,7 +105,8 @@ class DiffCommand(BaseCommand):
             template = Template(skillet_template)
             generated_snippets = [{
                     "xml": format_xml_string(x["element"], indent=6),
-                    "xpath": x["full_xpath"]
+                    "xpath": x["xpath"],
+                    "name": x["name"]
                 } for x in diff]
             output = template.render({"snippets": generated_snippets})
             print(output)
@@ -130,7 +131,7 @@ variables:
 
 snippets:
 {% for s in snippets %}
-  - name: snippet_{{ loop.index }}
+  - name: {{ s.name }}
     xpath: {{ s.xpath }}
     element: |-
 {{ s.xml }}{% endfor %}
