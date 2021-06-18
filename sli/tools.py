@@ -480,3 +480,20 @@ def get_password_input(prompt):
         if len(password) < 8:
             print("Password must be 8 characters")
     return password
+
+
+def load_config_file(source_name, pan=None):
+    """
+    Wrapper to load a config file, either off of disk or the device. Panoply session
+    is required as a second argument if config file may be on device
+    """
+
+    device_configs = ["running", "candidate", "baseline"]  # Can be pulled off of device by name not file
+    if source_name.startswith("file:") or pan is None:
+        file_name = "".join(source_name.split(":")[1:])
+        with open(file_name, "r") as f:
+            return f.read()
+    elif source_name in device_configs or source_name.replace("-", "").isdigit():
+        return pan.get_configuration(config_source=source_name)
+    else:
+        return pan.get_saved_configuration(source_name)
