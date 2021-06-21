@@ -8,4 +8,3 @@ class InvalidArgumentsException(SLIException):
 
 class AppSkilletNotFoundException(SLIException):
     pass
-

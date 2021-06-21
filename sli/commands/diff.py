@@ -9,6 +9,7 @@ from .base import BaseCommand
 from sli.errors import AppSkilletNotFoundException
 from sli.errors import InvalidArgumentsException
 from sli.errors import SLIException
+from sli.tools import load_config_file
 
 
 class DiffCommand(BaseCommand):
@@ -52,6 +53,11 @@ class DiffCommand(BaseCommand):
         Example: Get a diff and save as 'candidate_diff' into the context
 
             user$ sli diff running candidate candidate_diff -uc
+
+        Example: Get a diff from running and a local config file, save as out.xml
+
+            user$ sli diff running file:test-file.xml candidate_diff -uc -o out.xml
+
     """
 
     @staticmethod
@@ -150,20 +156,8 @@ class DiffCommand(BaseCommand):
         Internal method to actually perform the diff operation.
         """
 
-        source_name = self.source_name
-        latest_name = self.latest_name
-
-        device_configs = ["running", "candidate", "baseline"]  # Can be pulled off of device by name not file
-
-        if source_name in device_configs or source_name.replace("-", "").isdigit():
-            previous_config = self.pan.get_configuration(config_source=source_name)
-        else:
-            previous_config = self.pan.get_saved_configuration(source_name)
-
-        if latest_name in device_configs or source_name.replace("-", "").isdigit():
-            latest_config = self.pan.get_configuration(config_source=latest_name)
-        else:
-            latest_config = self.pan.get_saved_configuration(latest_name)
+        previous_config = load_config_file(self.source_name, self.pan)
+        latest_config = load_config_file(self.latest_name, self.pan)
         if self.sli.output_format == "set":
             snippets = self.pan.generate_set_cli_from_configs(previous_config, latest_config)
         else:
