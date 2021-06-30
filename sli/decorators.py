@@ -149,11 +149,14 @@ def get_panoply_from_context(command):
     Support function for decorators to retrieve a connected panoply
     session instantiated from the context
     """
+    context = command.sli.context
+    api_port = int(context["TARGET_PORT"]) if "TARGET_PORT" in context else 443
     pan = Panoply(
-        command.sli.context['TARGET_IP'],
-        command.sli.context['TARGET_USERNAME'],
-        command.sli.context['TARGET_PASSWORD']
+        context["TARGET_IP"],
+        context["TARGET_USERNAME"],
+        context["TARGET_PASSWORD"],
+        api_port=api_port
     )
     if not pan.connected:
-        raise TargetConnectionException('Unable to connect to device')
+        raise TargetConnectionException("Unable to connect to device")
     return pan

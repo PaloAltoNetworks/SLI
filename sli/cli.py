@@ -73,6 +73,7 @@ class FormatHelp(click.Command):
 def cli(ctx, action, **kwargs):
 
     options = {key: kwargs[key] for key in kwargs if kwargs[key] is not None}
+    action = action.replace("-", "_")
     sli = SkilletLineInterface(options, action, ctx.args)
     sli.execute()
 
