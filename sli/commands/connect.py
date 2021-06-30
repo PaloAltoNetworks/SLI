@@ -26,5 +26,5 @@ class ConnectCommand(BaseCommand):
         if self.sli.cm.use_context:
             print("Updating context...")
             self.sli.context["TARGET_IP"] = target_ip
-            self.sli.context["TARGET_username"] = target_username
-            self.sli.context["TARGET_password"] = target_password
+            self.sli.context["TARGET_USERNAME"] = target_username
+            self.sli.context["TARGET_PASSWORD"] = target_password
