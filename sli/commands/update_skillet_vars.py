@@ -1,13 +1,14 @@
-from skilletlib import Skillet
-
 from .base import BaseCommand
-from ..decorators import require_single_skillet
+from sli.errors import InvalidArgumentsException
+import re
+import os
+import shutil
 
 
 class ShowSkillet(BaseCommand):
     sli_command = "update_skillet_vars"
     short_desc = "Finds and updates all template variables in a Skillet"
-    no_skillet = False
+    no_skillet = True
     no_context = True
     help_text = """
 
@@ -16,31 +17,57 @@ class ShowSkillet(BaseCommand):
     to update the list of variables with your new additions.
 
     Usage:
-        sli update_skillet_vars --name k12_config_skillet -sd /tmp/skillets
+        sli update_skillet_vars yourfile.skillet.yaml
     """
 
-    @require_single_skillet
     def run(self):
-        skillet: Skillet = self.sli.skillet
-        found_variables: list = skillet.get_declared_variables()
 
-        new_variables = list()
+        if not len(self.args) == 1:
+            raise InvalidArgumentsException("Must specify single argument of file to update")
+        file_name = self.args[0]
+        file_bkp = file_name + ".bkp"
+        file_buffer = []  # Store the file as a list of lines in this buffer to replay later
 
-        for v in found_variables:
-            if v not in [x["name"] for x in skillet.variables]:
-                print(f"Found new variable {v}")
+        # Load the file and find the insertion point of new variables
+        with open(file_name, "r") as f:
+            i = 1
+            variables_start = None
+            variables_end = None
+            in_var_section = False
+            indent_dash = 2
+            indent_text = 4
+            for line in f:
 
-                new_variable = {"name": v, "description": v, "default": "", "type_hint": "text"}
+                file_buffer += line
 
-                skillet.variables.append(new_variable)
-                new_variables.append(v)
+                # Locate the beginning of the variables section
+                if line.strip() == "variables:":
+                    variables_start = i
+                    in_var_section = True
+                    print(f"Variables start on line {i}")
 
-        # FIXME - this does not account for skillets with includes, this will show the compiled skillet and not
-        # the skillet_dict as it probably should ...
-        print("=" * 80)
-        print(self.sli.skillet.dump_yaml())
-        print("=" * 80)
-        print("New variables found:")
-        for v in new_variables:
-            print(v)
-        print("=" * 80)
+                # Locate the end of the variables section
+                elif variables_start and line.strip() == "snippets:":
+                    variables_end = i
+                    in_var_section = False
+
+                # Find first line of existing variable block and infer spacing
+                elif in_var_section:
+                    if re.search(".*-.*name:", line):
+                        indent_dash = line.index("-")
+                        indent_text = line.index("n")
+
+                i += 1
+
+            print(variables_start)
+            print(variables_end)
+            print(indent_dash)
+            print(indent_text)
+
+        # Backup the file just in case
+        if os.path.exists(file_bkp):
+            os.remove(file_bkp)
+        shutil.copy(file_name, file_bkp)
+
+        # Overwrite the user submitted file
+        # Delete the backup file
