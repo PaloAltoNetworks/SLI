@@ -7,6 +7,10 @@ from jinja2 import Environment
 import jmespath
 from lxml import etree
 from io import BytesIO
+from pathlib import Path
+from sli.errors import AppSkilletNotFoundException
+from skilletlib import Skillet
+from skilletlib import SkilletLoader
 
 
 def get_var(var, args, context, options={}):
@@ -480,3 +484,33 @@ def load_config_file(source_name, pan=None):
         return pan.get_configuration(config_source=source_name)
     else:
         return pan.get_saved_configuration(source_name)
+
+
+def get_input(var_label: str, var_default: str) -> str:
+    """
+    utility method to get input from the user and return the default value if nothing is entered from the user
+
+    :param var_label: Label to show to the user
+    :param var_default: default to use if nothing is entered
+    :return: value entered from the user or default is input is None or ""
+    """
+    val = input(f"{var_label} <{var_default}>: ")
+    if val is None or val == "":
+        val = var_default
+
+    return val
+
+
+def load_app_skillet(skillet_name) -> Skillet:
+    """
+    Returns a SLI specific application skillet found in the app_skillets folder
+
+    :param skillet_name: Name of skillet to load
+    :return: Skillet loaded from name
+    """
+    sli_path = Path(__file__).parent.joinpath("app_skillets").resolve()
+    inline_sl = SkilletLoader(sli_path)
+    app_skillet: Skillet = inline_sl.get_skillet_with_name(skillet_name)
+    if not app_skillet:
+        raise AppSkilletNotFoundException("Could not find required resources")
+    return app_skillet

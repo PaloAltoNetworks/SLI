@@ -17,8 +17,8 @@ snippets:
   - name: template_data
     element: |-
       name: {{ skillet_name }}
-      label: skillet_label
-      description: skillet_description
+      label: {{ skillet_label }}
+      description: {{ skillet_description }}
 
       type: panos
 
@@ -29,5 +29,5 @@ snippets:
         - name: snippet_{{ loop.index }}
           xpath: {{ s.xpath }}
           element: |-
-            {{ s.element | minimal_indent(6) }}
+            {{ "\r" + s.element }}
       {% endfor -%}
