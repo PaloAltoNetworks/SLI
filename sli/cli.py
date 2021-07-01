@@ -7,14 +7,9 @@ class FormatHelp(click.Command):
     def format_help(self, ctx, formatter):
         super().format_help(ctx, formatter)
         commands = SkilletLineInterface.get_commands()
-        print('\nAvailable Actions:\n')
+        print("\nAvailable Actions:\n")
         command_list = [{"cmd": x, "desc": getattr(commands[x], "short_desc", None)} for x in commands.keys()]
-        print_table(
-            command_list,
-            {
-                "Command": "cmd",
-                "Description": "desc"
-            })
+        print_table(command_list, {"Command": "cmd", "Description": "desc"})
         print("")
 
     def parse_args(self, ctx, args):
@@ -23,26 +18,22 @@ class FormatHelp(click.Command):
         default to normal help text via 'format_help'
         """
 
-        if '--help' in args and len(args) > 1:
+        if "--help" in args and len(args) > 1:
             commands = SkilletLineInterface.get_commands()
             for command in args:
                 if command in commands:
                     c = commands[command]
-                    if hasattr(c, 'help_text'):
+                    if hasattr(c, "help_text"):
                         print(c.help_text)
                         ctx.exit()
-                    elif hasattr(c, 'short_desc'):
+                    elif hasattr(c, "short_desc"):
                         print(c.short_desc)
                         ctx.exit()
 
         super().parse_args(ctx, args)
 
 
-@click.command(
-        cls=FormatHelp,
-        context_settings={'allow_extra_args': True},
-        no_args_is_help=True
-    )
+@click.command(cls=FormatHelp, context_settings={"allow_extra_args": True}, no_args_is_help=True)
 @click.option("-e", "--environment", help="Environment file")
 @click.option("-cm", "--commit", is_flag=True, help="Commit configuration changes")
 @click.option("-cf", "--config-file", help="Input configuration file")
@@ -53,6 +44,7 @@ class FormatHelp(click.Command):
 @click.option("-sd", "--directory", help="Directory to load skillets from", default="./")
 @click.option("-u", "--username", help="Device username")
 @click.option("-o", "--out-file", help="Output file")
+@click.option("-off", "--offline", is_flag=True, help="Offline Mode - Do not connect to Device", default=False)
 @click.option("-od", "--output-directory", help="Output Directory")
 @click.option("-p", "--password", help="Device password")
 @click.option("-n", "--name", help="Name of skillet to execute")
@@ -63,10 +55,19 @@ class FormatHelp(click.Command):
 @click.option("-ec", "--encrypt-context", is_flag=True, help="Encrypt the context object")
 @click.option("-cp", "--context-password", help="Password for encrypted context", default="")
 @click.option("-cv", "--context-var", help="Context variable to store output in")
-@click.option("-nc", "--no-config", is_flag=True, help="Hide full device configuration from output", )
-@click.option("-of", "--output-format", help="Output format, xml or set",
-              type=click.Choice(["xml", "set", "skillet"]), default="xml"
-              )
+@click.option(
+    "-nc",
+    "--no-config",
+    is_flag=True,
+    help="Hide full device configuration from output",
+)
+@click.option(
+    "-of",
+    "--output-format",
+    help="Output format, xml or set",
+    type=click.Choice(["xml", "set", "skillet"]),
+    default="xml",
+)
 @click.option("-ad", "--defaults", is_flag=True, help="Assume all default inputs, useful for development")
 @click.argument("action", nargs=1, default="execute")
 @click.pass_context
