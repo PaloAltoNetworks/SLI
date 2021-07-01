@@ -25,9 +25,9 @@ snippets:
       variables:
 
       snippets:
-      {% for s in snippets %}
+      {%- for s in snippets %}
         - name: snippet_{{ loop.index }}
           xpath: {{ s.xpath }}
           element: |-
             {{ "\r" + s.element }}
-      {% endfor -%}
+      {%- endfor -%}
