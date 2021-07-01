@@ -1,20 +1,14 @@
-from pathlib import Path
-
-from skilletlib import Skillet
-from skilletlib import SkilletLoader
-
 from sli.decorators import require_ngfw_connection_params
 from sli.decorators import require_panoply_connection
 from .base import BaseCommand
-from sli.errors import AppSkilletNotFoundException
 from sli.errors import InvalidArgumentsException
 from sli.errors import SLIException
-from sli.tools import load_config_file
+from sli.tools import load_config_file, format_xml_string, get_input, load_app_skillet
 
 
 class DiffCommand(BaseCommand):
     sli_command = "diff"
-    short_desc = "Get the differences between two config versions, candidate, running, previous running, etc"
+    short_desc = "Get the differences between two config versions: candidate, running, previous running, etc"
     no_skillet = True
     capture_var = None
     pan = None
@@ -54,25 +48,14 @@ class DiffCommand(BaseCommand):
 
             user$ sli diff running candidate candidate_diff -uc
 
-        Example: Get a diff from running and a local config file, save as out.xml
+        Example: Get a diff from running and a local config file, save as out.xml. Note the 'file:' prefix.
 
             user$ sli diff running file:test-file.xml candidate_diff -uc -o out.xml
 
+        Example: Get a diff between two local saved configs and same as diff.out. Note the '--offline' flag.
+
+            user$ sli diff running test-file.xml test-file-2.xml --offline -o diff.out
     """
-
-    @staticmethod
-    def _load_app_skillet(skillet_name):
-        """
-        Returns a SLI specific application skillet found in the app_skillets folder
-        """
-        sli_path = Path(__file__).parent.joinpath("../app_skillets").resolve()
-        inline_sl = SkilletLoader(sli_path)
-        app_skillet: Skillet = inline_sl.get_skillet_with_name(skillet_name)
-
-        if not app_skillet:
-            raise AppSkilletNotFoundException("Could not find required resources")
-
-        return app_skillet
 
     def _parse_args(self) -> None:
         """
@@ -107,21 +90,6 @@ class DiffCommand(BaseCommand):
         self.source_name = source_name
         self.latest_name = latest_name
 
-    @staticmethod
-    def _get_input(var_label: str, var_default: str) -> str:
-        """
-        utility method to get input from the user and return the default value if nothing is entered from the user
-
-        :param var_label: Label to show to the user
-        :param var_default: default to use if nothing is entered
-        :return: value entered from the user or default is input is None or ""
-        """
-        val = input(f"{var_label} <{var_default}>: ")
-        if val is None or val == "":
-            val = var_default
-
-        return val
-
     def _handle_snippets(self, snippets: list, vars: list) -> None:
         output = ""
 
@@ -135,10 +103,23 @@ class DiffCommand(BaseCommand):
             output = "\n".join(snippets)
 
         else:
-            panos_skeleton = self._load_app_skillet("panos_skillet_skeleton")
 
-            skillet_name = self._get_input("Skillet Name:", "my skillet")
-            skillet_output = panos_skeleton.execute({"snippets": snippets, "skillet_name": skillet_name})
+            for snippet in snippets:
+                snippet["element"] = format_xml_string(snippet["element"], indent=6)
+
+            panos_skeleton = load_app_skillet("panos_skillet_skeleton")
+
+            skillet_name = get_input("Skillet Name:", "my_skillet")
+            skillet_label = get_input("Skillet Label:", "my label")
+            skillet_description = get_input("Skillet Description:", "my description")
+            skillet_output = panos_skeleton.execute(
+                {
+                    "snippets": snippets,
+                    "skillet_name": skillet_name,
+                    "skillet_label": skillet_label,
+                    "skillet_description": skillet_description,
+                }
+            )
 
             if not panos_skeleton.success:
                 raise SLIException("Could not generate Skillet output")

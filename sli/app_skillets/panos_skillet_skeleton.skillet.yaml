@@ -17,17 +17,17 @@ snippets:
   - name: template_data
     element: |-
       name: {{ skillet_name }}
-      label: skillet_label
-      description: skillet_description
+      label: {{ skillet_label }}
+      description: {{ skillet_description }}
 
       type: panos
 
       variables:
 
       snippets:
-      {% for s in snippets %}
+      {%- for s in snippets %}
         - name: snippet_{{ loop.index }}
           xpath: {{ s.xpath }}
           element: |-
-            {{ s.element | minimal_indent(6) }}
-      {% endfor -%}
+            {{ "\r" + s.element }}
+      {%- endfor -%}
