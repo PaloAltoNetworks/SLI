@@ -74,6 +74,11 @@ class CreateTemplate(BaseCommand):
                 break
         return xpath_short, missing
 
+    @staticmethod
+    def strip_var_spaces(in_str) -> str:
+        """Remove spaces around variables inside of a block of text"""
+        return in_str.replace("{{ ", "{{").replace(" }}", "}}")
+
     @require_single_skillet
     @require_skillet_type("panos", "panorama")
     def run(self):
@@ -102,9 +107,10 @@ class CreateTemplate(BaseCommand):
 
         # Expand any missing XML nodes
         for snippet in snippets:
-            if len(baseline_xml.xpath(snippet.metadata["xpath"])):
+            snippet_xpath = self.strip_var_spaces(snippet.metadata["xpath"])
+            if len(baseline_xml.xpath(snippet_xpath)):
                 continue
-            short_xpath, missing = self.find_closest_entry(baseline_xml, snippet.metadata["xpath"])
+            short_xpath, missing = self.find_closest_entry(baseline_xml, snippet_xpath)
             ele = baseline_xml.xpath(short_xpath)[0]
             for missing_ele in missing:
                 attr = None
@@ -132,8 +138,9 @@ class CreateTemplate(BaseCommand):
         # Find the various insert points on all snippets
         lines = []
         for snippet in snippets:
+
             xpath = snippet.metadata["xpath"]
-            found = baseline_xml.xpath(xpath)
+            found = baseline_xml.xpath(self.strip_var_spaces(xpath))
 
             if len(found) > 1:
                 raise Exception(f"xpath {xpath} returned more than 1 result in baseline")
@@ -142,7 +149,10 @@ class CreateTemplate(BaseCommand):
 
             # Insert point found
             else:
-                lines.append({"template": snippet.template_str, "line": found[0].sourceline})
+                lines.append({
+                    "template": self.strip_var_spaces(snippet.template_str),
+                    "line": found[0].sourceline
+                })
 
         # Sort the keys so we're starting from the point furthest down the file
         lines = sorted(lines, key=lambda i: i["line"], reverse=True)

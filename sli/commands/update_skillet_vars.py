@@ -3,9 +3,10 @@ from sli.errors import InvalidArgumentsException
 import re
 import os
 import shutil
+from skilletlib import SkilletLoader
 
 
-class ShowSkillet(BaseCommand):
+class UpdateSkilletVars(BaseCommand):
     sli_command = "update_skillet_vars"
     short_desc = "Finds and updates all template variables in a Skillet"
     no_skillet = True
@@ -28,6 +29,15 @@ class ShowSkillet(BaseCommand):
         file_bkp = file_name + ".bkp"
         file_buffer = []  # Store the file as a list of lines in this buffer to replay later
 
+        # Load skillet, extract variables and determine missing
+        sl = SkilletLoader()
+        skillet = sl.load_skillet(file_name)
+        vars_specified = [x['name'] for x in skillet.variables]
+        missing_vars = [x for x in skillet.get_declared_variables() if x not in vars_specified]
+        if len(missing_vars) < 1:
+            print("Did not find any variables in snippets that were not declared")
+            return
+
         # Load the file and find the insertion point of new variables
         with open(file_name, "r") as f:
             i = 1
@@ -36,15 +46,14 @@ class ShowSkillet(BaseCommand):
             in_var_section = False
             indent_dash = 2
             indent_text = 4
-            for line in f:
+            for line in f.readlines():
 
-                file_buffer += line
+                file_buffer.append(line)
 
                 # Locate the beginning of the variables section
                 if line.strip() == "variables:":
                     variables_start = i
                     in_var_section = True
-                    print(f"Variables start on line {i}")
 
                 # Locate the end of the variables section
                 elif variables_start and line.strip() == "snippets:":
@@ -59,15 +68,26 @@ class ShowSkillet(BaseCommand):
 
                 i += 1
 
-            print(variables_start)
-            print(variables_end)
-            print(indent_dash)
-            print(indent_text)
-
-        # Backup the file just in case
+        # Backup the file in case of issue
         if os.path.exists(file_bkp):
             os.remove(file_bkp)
         shutil.copy(file_name, file_bkp)
 
         # Overwrite the user submitted file
+        with open(file_name, "w") as f:
+            i = 1
+            for line in file_buffer:
+
+                # End of variables section, append missing_vars here
+                if i == variables_end:
+                    for mv in missing_vars:
+                        f.write(f"{' ' * indent_dash}- name: {mv}\n")
+                        f.write(f"{' ' * indent_text}description: {mv}\n")
+                        f.write(f"{' ' * indent_text}default: \n")
+                        f.write(f"{' ' * indent_text}type_hint: text\n\n")
+
+                f.write(line)
+                i += 1
+
         # Delete the backup file
+        os.remove(file_bkp)

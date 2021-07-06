@@ -8,7 +8,7 @@ from sli.tools import load_config_file, format_xml_string, get_input, load_app_s
 
 class DiffCommand(BaseCommand):
     sli_command = "diff"
-    short_desc = "Get the differences between two config versions, candidate, running, previous running, etc"
+    short_desc = "Get the differences between two config versions: candidate, running, previous running, etc"
     no_skillet = True
     capture_var = None
     pan = None
@@ -48,10 +48,13 @@ class DiffCommand(BaseCommand):
 
             user$ sli diff running candidate candidate_diff -uc
 
-        Example: Get a diff from running and a local config file, save as out.xml
+        Example: Get a diff from running and a local config file, save as out.xml. Note the 'file:' prefix.
 
             user$ sli diff running file:test-file.xml candidate_diff -uc -o out.xml
 
+        Example: Get a diff between two local saved configs and same as diff.out. Note the '--offline' flag.
+
+            user$ sli diff running test-file.xml test-file-2.xml --offline -o diff.out
     """
 
     def _parse_args(self) -> None:
@@ -109,12 +112,14 @@ class DiffCommand(BaseCommand):
             skillet_name = get_input("Skillet Name:", "my_skillet")
             skillet_label = get_input("Skillet Label:", "my label")
             skillet_description = get_input("Skillet Description:", "my description")
-            skillet_output = panos_skeleton.execute({
+            skillet_output = panos_skeleton.execute(
+                {
                     "snippets": snippets,
                     "skillet_name": skillet_name,
                     "skillet_label": skillet_label,
-                    "skillet_description": skillet_description
-                })
+                    "skillet_description": skillet_description,
+                }
+            )
 
             if not panos_skeleton.success:
                 raise SLIException("Could not generate Skillet output")

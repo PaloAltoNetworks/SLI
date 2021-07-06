@@ -497,6 +497,10 @@ def load_config_file(source_name, pan=None):
         file_name = "".join(source_name.split(":")[1:])
         with open(file_name, "r") as f:
             return f.read()
+    elif not pan.connected:
+        # offline mode was requested, try to load local files only
+        with open(source_name, "r") as f:
+            return f.read()
     elif source_name in device_configs or source_name.replace("-", "").isdigit():
         return pan.get_configuration(config_source=source_name)
     else:

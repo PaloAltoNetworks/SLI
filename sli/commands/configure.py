@@ -10,8 +10,8 @@ from .base import BaseCommand
 
 
 class ConfigureCommand(BaseCommand):
-    sli_command = 'configure'
-    short_desc = 'Execute a configuration skillet of type panos'
+    sli_command = "configure"
+    short_desc = "Execute a configuration skillet of type panos"
     help_text = """
     Executes a PAN-OS configuration skillet.
 
@@ -30,13 +30,30 @@ class ConfigureCommand(BaseCommand):
     def run(self):
 
         print(f"Executing {self.sli.skillet.name}...")
-        self.sli.skillet.execute(self.sli.context)
-        if self.sli.commit:
+        output = self.sli.skillet.execute(self.sli.context)
+
+        needs_commit = output.get("changed", False)
+
+        if needs_commit and self.sli.commit:
             print("Committing configuration...")
             self.sli.skillet.panoply.commit()
             print("Finished")
+
         else:
-            print("Configuration loaded into candidate config")
+            if needs_commit:
+                print("Configuration loaded into candidate config")
+
+            else:
+                context_keys = output.get("outputs", {}).keys()
+
+                if len(context_keys):
+                    print("Saved the following items into the context:")
+                    print("----")
+
+                    for k in context_keys:
+                        print(k)
+
+                    print("----")
 
     @require_single_skillet
     @require_skillet_type("panos", "panorama")
@@ -74,13 +91,20 @@ class ConfigureCommand(BaseCommand):
                 change["when"] = True
 
                 if not snippet.should_execute(skillet_context):
-                    change["message"] = 'This snippet would be skipped due to when conditional'
+                    change["message"] = "This snippet would be skipped due to when conditional"
                     change["when"] = False
                     continue
 
-                if "cmd" in snippet.metadata and \
-                        snippet.metadata["cmd"] in ("op", "set", "edit", "override", "move", "rename",
-                                                    "clone", "delete"):
+                if "cmd" in snippet.metadata and snippet.metadata["cmd"] in (
+                    "op",
+                    "set",
+                    "edit",
+                    "override",
+                    "move",
+                    "rename",
+                    "clone",
+                    "delete",
+                ):
 
                     change["message"] = "This snippet would be executed"
 
