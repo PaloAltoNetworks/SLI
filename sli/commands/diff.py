@@ -132,6 +132,22 @@ class DiffCommand(BaseCommand):
     def _get_vars(self) -> list:
         return []
 
+
+    @staticmethod
+    def _get_input(var_label: str, var_default: str) -> str:
+        """
+        utility method to get input from the user and return the default value if nothing is entered from the user
+
+        :param var_label: Label to show to the user
+        :param var_default: default to use if nothing is entered
+        :return: value entered from the user or default is input is None or ""
+        """
+        val = input(f"{var_label} <{var_default}>: ")
+        if val is None or val == "":
+            val = var_default
+
+        return val
+
     def _get_snippets(self) -> list:
         """
         Internal method to actually perform the diff operation.
