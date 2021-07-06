@@ -1,9 +1,9 @@
 from getpass import getpass
 from skilletlib.panoply import Panoply
-from skilletlib.exceptions import TargetConnectionException
 from sli.tools import get_var
 from sli.ssh import SSHSession
 from lxml import etree
+from skilletlib.exceptions import LoginException, TargetConnectionException
 
 
 def require_ngfw_connection_params(func):
@@ -26,8 +26,11 @@ def require_panoply_connection(func):
     """
 
     def wrap(command):
-        pan = get_panoply_from_context(command)
-        return func(command, pan)
+        try:
+            pan = get_panoply_from_context(command)
+            return func(command, pan)
+        except (LoginException, TargetConnectionException) as e:
+            print(f"Login error: {e}")
 
     return wrap
 
