@@ -3,6 +3,7 @@ from ..decorators import require_single_skillet
 from ..decorators import require_skillet_type
 from ..errors import InvalidArgumentsException
 from ..errors import SLIException
+from ..tools import get_input
 
 
 class SkilletToAnsibleRoleCommand(AnsibleRoleCommand):
@@ -41,7 +42,7 @@ class SkilletToAnsibleRoleCommand(AnsibleRoleCommand):
         """
         Sadly, we can't get this directly from the loaded skillet programmatically...
         """
-        return self._get_input("PAN-OS Version to target", "10.0")
+        return get_input("PAN-OS Version to target", "10.0")
 
     @require_single_skillet
     @require_skillet_type("panos", "panorama")

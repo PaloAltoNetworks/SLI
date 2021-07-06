@@ -9,6 +9,7 @@ from skilletlib import SkilletLoader
 from .diff import DiffCommand
 from ..errors import InvalidArgumentsException
 from ..errors import SLIException
+from ..tools import get_input
 
 
 class AnsibleRoleCommand(DiffCommand):
@@ -110,10 +111,10 @@ class AnsibleRoleCommand(DiffCommand):
             print("No Configuration diffs found! Try a different combination of configuration sources")
             exit(1)
 
-        namespace = self._get_input("Namespace", "pan_community")
-        role_name = self._get_input("Role Name", "generated_role")
-        description = self._get_input("Role Description", "generated_role")
-        author_name = self._get_input("Author Name", "john doe")
+        namespace = get_input("Namespace", "pan_community")
+        role_name = get_input("Role Name", "generated_role")
+        description = get_input("Role Description", "generated_role")
+        author_name = get_input("Author Name", "john doe")
 
         # get version and major version from connected NGFW
         version = self._get_version()
