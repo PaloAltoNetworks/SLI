@@ -95,9 +95,10 @@ class DiffCommand(BaseCommand):
 
         if self.sli.output_format == "xml":
             for obj in snippets:
+                element = format_xml_string(obj["element"], indent=2)
                 output += f'name: {obj["name"]}\n'
                 output += f'xpath: {obj["xpath"]}\n'
-                output += f'element: {obj["element"]}\n\n'
+                output += f"element: |-\n{element}\n\n"
 
         elif self.sli.output_format == "set":
             output = "\n".join(snippets)
