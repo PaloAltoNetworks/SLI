@@ -140,8 +140,8 @@ class AnsibleRoleCommand(DiffCommand):
         if next(os.scandir(output_path), None):
             raise SLIException(f"Ansible Roles Directory: {output_path} must be empty!")
 
-        # clone out skeleton repo
-        Repo.clone_from(self.repo_url, output_path)
+        # clone our skeleton repo
+        Repo.clone_from(url=self.repo_url, to_path=output_path, env={"GIT_SSL_NO_VERIFY": "1"})
 
         # rename the directory structure appropriately
         # it comes from the skeleton repo as
