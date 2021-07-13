@@ -161,9 +161,13 @@ def get_variable_input(var, context, defaults=False):
     ret_dict = {}
 
     # Check for a toggle hint and return if not applicable
-    if 'toggle_hint' in var:
-        if not var['toggle_hint']['value'] == context.get(var['toggle_hint'].get('source')):
-            return ret_dict
+    if "toggle_hint" in var:
+        if isinstance(var["toggle_hint"]["value"], list):
+            if not context.get(var["toggle_hint"].get("source")) in var["toggle_hint"]["value"]:
+                return ret_dict
+        else:
+            if not var["toggle_hint"]["value"] == context.get(var["toggle_hint"].get("source")):
+                return ret_dict
 
     if type_hint == 'checkbox':
 
