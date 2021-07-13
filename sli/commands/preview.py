@@ -25,7 +25,7 @@ class PreviewCommand(BaseCommand):
 """
 
     @require_single_skillet
-    @require_skillet_type("panos", "panorama")
+    @require_skillet_type("panos", "panorama", "pan-validation")
     @load_variables
     @require_config
     def run(self, config):
