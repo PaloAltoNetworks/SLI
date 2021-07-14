@@ -16,7 +16,7 @@ class CommitCommand(BaseCommand):
     def run(self, pan: Panoply):
         try:
             print("Committing configuration...")
-            self.sli.skillet.panoply.commit()
+            pan.commit()
             print("Success...")
 
         except PanoplyException as pe:
