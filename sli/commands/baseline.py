@@ -25,7 +25,7 @@ class BaselineCommand(BaseCommand):
 
             if self.sli.commit:
                 print("Committing configuration...")
-                self.sli.skillet.panoply.commit()
+                pan.commit()
                 print("Success...")
 
         except PanoplyException as pe:
