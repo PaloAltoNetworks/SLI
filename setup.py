@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="sli",
-    version="##_VERSION_##",
+    version="0.0.0.0dev",
     author="Andrew Mallory",
     author_email="amallory@paloaltonetworks.com",
     description="A tool for working with Palo Alto Networks skillets",
