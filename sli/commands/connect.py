@@ -4,6 +4,7 @@ from skilletlib.exceptions import TargetConnectionException
 from skilletlib.panoply import Panos
 
 from .base import BaseCommand
+from ..decorators import require_ngfw_connection_params
 
 
 class ConnectCommand(BaseCommand):
@@ -11,10 +12,18 @@ class ConnectCommand(BaseCommand):
     short_desc = "Connect to NGFW and save auth information into context if desired"
     no_skillet = True
 
+    def execute(self):
+        self.sli.context.pop("TARGET_IP", "")
+        self.sli.context.pop("TARGET_USERNAME", "")
+        self.sli.context.pop("TARGET_PASSWORD", "")
+        super().execute()
+
+    @require_ngfw_connection_params
     def run(self):
-        target_ip = input("Device: ")
-        target_username = input("Username: ")
-        target_password = getpass()
+
+        target_ip = self.sli.context["TARGET_IP"]
+        target_username = self.sli.context["TARGET_USERNAME"]
+        target_password = self.sli.context["TARGET_PASSWORD"]
 
         pan = Panos(target_ip, target_username, target_password)
         if not pan.connected:
@@ -23,8 +32,3 @@ class ConnectCommand(BaseCommand):
         sw_version = pan.facts["sw-version"]
         print(f"Connected to device: {target_ip} running PAN-OS: {sw_version}")
 
-        if self.sli.cm.use_context:
-            print("Updating context...")
-            self.sli.context["TARGET_IP"] = target_ip
-            self.sli.context["TARGET_USERNAME"] = target_username
-            self.sli.context["TARGET_PASSWORD"] = target_password
