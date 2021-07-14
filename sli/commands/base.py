@@ -2,6 +2,8 @@ from skilletlib import Skillet
 
 
 class BaseCommand:
+    sli_command = 'unimplemented'
+
     def __init__(self, sli):
         self.sli = sli
         self.args = self.sli.args
@@ -19,6 +21,8 @@ class BaseCommand:
         self._get_output()
 
     def execute_debug(self):
+        self.raw_args = self.args
+        self.args = [x for x in self.args if "=" not in x]
         if hasattr(self, 'debug'):
             self.debug()
         else:
