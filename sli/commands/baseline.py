@@ -23,6 +23,11 @@ class BaselineCommand(BaseCommand):
 
             print(f'Successfully reverted {self.sli.context["TARGET_IP"]} to baseline config.')
 
+            if self.sli.commit:
+                print("Committing configuration...")
+                self.sli.skillet.panoply.commit()
+                print("Success...")
+
         except PanoplyException as pe:
             print(pe)
             exit(1)
