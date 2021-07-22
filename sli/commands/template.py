@@ -36,15 +36,15 @@ class TemplateCommand(BaseCommand):
         else:
             out_directory = ""
 
-        snippets = self.sli.skillet.get_snippets()
-        for snippet in snippets:
-            if not snippet.should_execute(self.sli.context):
-                continue
-            file_path = os.path.sep.join([self.sli.skillet.path, snippet.file])
-            with open(file_path, 'r') as f:
-                rendered = snippet.render(f.read(), self.sli.context)
-            out_path = os.path.sep.join([out_directory, snippet.file]) if len(out_directory) else snippet.file
-            with open(out_path, 'w') as f:
-                f.write(rendered)
+        output = self.sli.skillet.execute(self.sli.context)
+        output = output["template"]
 
-        print(f"Template written to {out_path}")
+        out_file = self.sli.options.get("out_file", False)
+        if out_file:
+
+            out_path = os.path.sep.join([out_directory, out_file]) if len(out_directory) else out_file
+            with open(out_path, 'w') as f:
+                f.write(output)
+            print(f"Template written to {out_path}")
+        else:
+            print(output)
