@@ -1,4 +1,4 @@
-skilletlib~=1.1.9
+skilletlib~=1.2.0
 click
 panforge
 jmespath
