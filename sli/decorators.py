@@ -184,6 +184,14 @@ def get_panoply_from_context(command):
     context = command.sli.context
     api_port = int(context["TARGET_PORT"]) if "TARGET_PORT" in context else 443
     pan = Panoply(context["TARGET_IP"], context["TARGET_USERNAME"], context["TARGET_PASSWORD"], api_port=api_port)
+
+    wait = command.sli.options.get("wait")
+    if wait:
+        if not isinstance(wait, int):
+            wait = int(wait)
+
+        pan.wait_for_device_ready(30, wait)
+
     if not pan.connected:
         raise TargetConnectionException("Unable to connect to device")
     return pan

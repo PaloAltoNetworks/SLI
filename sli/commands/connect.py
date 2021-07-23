@@ -1,7 +1,7 @@
 from getpass import getpass
 
 from skilletlib.exceptions import TargetConnectionException
-from skilletlib.panoply import Panos
+from skilletlib.panoply import Panoply
 
 from .base import BaseCommand
 from ..decorators import require_ngfw_connection_params
@@ -25,7 +25,15 @@ class ConnectCommand(BaseCommand):
         target_username = self.sli.context["TARGET_USERNAME"]
         target_password = self.sli.context["TARGET_PASSWORD"]
 
-        pan = Panos(target_ip, target_username, target_password)
+        pan = Panoply(target_ip, target_username, target_password)
+
+        wait = self.sli.options.get("wait")
+        if wait:
+            if not isinstance(wait, int):
+                wait = int(wait)
+
+            pan.wait_for_device_ready(30, wait)
+
         if not pan.connected:
             raise TargetConnectionException("Unable to connect to device...")
 
