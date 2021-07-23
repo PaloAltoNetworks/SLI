@@ -51,10 +51,11 @@ class FormatHelp(click.Command):
 @click.option("-r", "--report", is_flag=True, help="Generate a panforge formatted report")
 @click.option("-rf", "--report-file", help="Location of HTML file to create")
 @click.option("-uc", "--use-context", is_flag=True, help="Use a context manager, (global by default)")
-@click.option("-cn", "--context-name", help="Use a contexet manager other than global")
+@click.option("-cn", "--context-name", help="Use a context manager other than global")
 @click.option("-ec", "--encrypt-context", is_flag=True, help="Encrypt the context object")
 @click.option("-cp", "--context-password", help="Password for encrypted context", default="")
 @click.option("-cv", "--context-var", help="Context variable to store output in")
+@click.option("-w", "--wait", help="Wait for number of seconds for PAN-OS device to come online")
 @click.option(
     "-nc",
     "--no-config",
