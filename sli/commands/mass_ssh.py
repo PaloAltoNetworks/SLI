@@ -40,6 +40,21 @@ class MassSSH(BaseCommand):
               username: device_two_user
               password: device_two_password
 
+        ---
+
+        Sample structuring of a script.txt configuring a new zone
+
+        ---
+
+        configure
+        set zone new_zone
+        commit
+
+        ---
+
+        the input script is not limited to supporting just configuration commands, show commands can be used for
+        data gathering on a list of devices simultaneously
+
         Usage:
             sli mass_ssh -u username -p password -o output_dir script.txt [comma-seperated-devices | config.yaml]
     """
