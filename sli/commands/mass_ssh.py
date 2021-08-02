@@ -16,7 +16,7 @@ class MassSSH(BaseCommand):
     help_text = """
         Execute a script of CLI commands against multiple firewalls asynchronously. The var
         script.txt must reference a file that contains the CLI commands to run, and devices
-        must be either a comma seperated list of devices, or a configuration file describing
+        must be either a comma separated list of devices, or a configuration file describing
         connectivity.
 
         The -o option refers to a directory to create and populate with output logs from all
@@ -25,7 +25,7 @@ class MassSSH(BaseCommand):
         Providing credentials in the yaml file is optional and may be passed from the CLI,
         however the yaml file provides support for overriding credentials for specific devices.
 
-        Sample structuring exmpale of the yaml file:
+        Sample structuring example of the yaml file:
 
         ---
 
@@ -73,12 +73,12 @@ class MassSSH(BaseCommand):
 
     def load_config_from_yaml(self, out_directory):
         """
-        Load list of devices and optional credentials from specifid config.yaml file
+        Load list of devices and optional credentials from specified config.yaml file
         """
         # Assemble devices from YAML configuration file
         with open(self.args[1], "r") as f:
             devices = yaml.safe_load(f)
-        # Check for presense of devices without specific credentials
+        # Check for presence of devices without specific credentials
         if len([x for x in devices["devices"] if "username" not in x and "password" not in x]):
 
             # Get default credentials if global credentials not specified
@@ -141,7 +141,7 @@ class MassSSH(BaseCommand):
         except Exception as e:
             dev_obj["error"] = e
 
-    async def mass_ssh(self, script, out_directory, devices):
+    async def mass_ssh(self, devices):
         """
         Run gather on individual coroutines
         """
@@ -184,11 +184,7 @@ class MassSSH(BaseCommand):
             )
 
         # Execute SSH sessions
-        asyncio.get_event_loop().run_until_complete(self.mass_ssh(
-            script,
-            out_directory,
-            devices
-        ))
+        asyncio.get_event_loop().run_until_complete(self.mass_ssh(devices))
 
         # If not saving to file, print device output
         if not out_directory:
