@@ -5,6 +5,7 @@ from sli import commands
 from types import ModuleType
 
 from sli.contextManager import ContextManager
+from sli.commands.base import BaseCommand
 
 
 class SkilletLineInterface:
@@ -62,6 +63,10 @@ class SkilletLineInterface:
                 for item_attr in dir(item_obj):
                     item_attr_obj = getattr(item_obj, item_attr)
                     if isclass(item_attr_obj):
+
+                        # Only load commands that subclass BaseCommand
+                        if item_attr_obj == BaseCommand or not issubclass(item_attr_obj, BaseCommand):
+                            continue
 
                         # Load only SLI command modules that are appropriately written
                         command_string = getattr(item_attr_obj, "sli_command", "")
