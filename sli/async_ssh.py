@@ -107,16 +107,14 @@ class AsyncSSHSession:
             ll = ll.split("\n")
 
         # Setup output options
-        session_output = None
-        echo = False
+        session_output = ""
         if out_file:
             session_output = open(out_file, "w")
-            echo = True
 
         for line in ll:
             if not len(line):
                 continue
-            output = await self.cli_command(line.strip(), echo=echo)
+            output = await self.cli_command(line.strip(), echo=True)
 
             # Save output to file if specified
             if out_file:

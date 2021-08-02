@@ -1,9 +1,12 @@
 from .base import BaseCommand
 from sli.async_ssh import AsyncSSHSession
+from sli.tools import print_table
 import asyncio
+from asyncssh.misc import PermissionDenied
 import re
 import yaml
 from getpass import getpass
+import os
 
 
 class MassSSH(BaseCommand):
@@ -17,7 +20,7 @@ class MassSSH(BaseCommand):
         connectivity.
 
         The -o option refers to a directory to create and populate with output logs from all
-        devices configured. This directory will be overwritten if it already exists, be careful.
+        devices configured. The contents of the directory will be overwritten if it already exists.
 
         Providing credentials in the yaml file is optional and may be passed from the CLI,
         however the yaml file provides support for overriding credentials for specific devices.
@@ -53,7 +56,7 @@ class MassSSH(BaseCommand):
             password = getpass("Default password: ")
         return username, password
 
-    def load_config_from_yaml(self):
+    def load_config_from_yaml(self, out_directory):
         """
         Load list of devices and optional credentials from specifid config.yaml file
         """
@@ -79,10 +82,13 @@ class MassSSH(BaseCommand):
                     device["username"] = username
                 if "password" not in device:
                     device["password"] = password
-                device["out_file"] = f"{device['device']}.txt"
+                device["out_file"] = f"{os.path.join(out_directory, device['device'])}.txt" if out_directory else None
                 device["coroutine"] = None
                 device["status"] = False
-                device["error"] = ""
+                device["error"] = "",
+                device["output"] = None
+
+        return devices
 
     def run(self):
 
@@ -93,8 +99,12 @@ class MassSSH(BaseCommand):
             client = AsyncSSHSession(device, username, password)
             try:
                 await client.connect()
-                await client.run_command_script(script, out_file=out_file)
+                dev_obj["output"] = await client.run_command_script(script, out_file=out_file)
                 dev_obj["status"] = True
+            except OSError:
+                dev_obj["error"] = "Unable to connect to device"
+            except PermissionDenied:
+                dev_obj["error"] = "Device rejected login"
             except Exception as e:
                 dev_obj["error"] = e
 
@@ -110,9 +120,14 @@ class MassSSH(BaseCommand):
             with open(self.args[0], "r") as f:
                 script = f.read()
 
+            out_directory = self.sli.options.get("out_file", None)
+            if out_directory:
+                if not os.path.exists(out_directory):
+                    os.mkdir(out_directory)
+
             devices = None
             if re.match(r".*\.y.*ml$", self.args[1]):
-                devices = self.load_config_from_yaml()
+                devices = self.load_config_from_yaml(out_directory)
 
             else:
                 # Assemble devices from comma seperated list
@@ -121,14 +136,12 @@ class MassSSH(BaseCommand):
                             "device": x,
                             "username": username,
                             "password": password,
-                            "out_file": f"{x}.txt",
+                            "out_file": f"{os.path.join(out_directory,x)}.txt" if out_directory else None,
                             "coroutine": None,
                             "status": False,
+                            "output": None,
                             "error": "",
                         } for x in self.args[1].split(",")]
-
-            print(devices)
-            # return
 
             # Populate devices objects with coroutines
             for dev in devices:
@@ -145,6 +158,21 @@ class MassSSH(BaseCommand):
             tasks = [x["coroutine"] for x in devices]
             print(f"Starting SSH to {len(devices)} devices")
             await asyncio.gather(*tasks, return_exceptions=True)
-            print("done")
+
+            # If not saving to file, print device output
+            if not out_directory:
+                for dev in devices:
+                    if dev["status"]:
+                        print(f"{dev['device']}\n{'-'*len(dev['device'])}")
+                        print(dev["output"])
+
+            # Print results from all devices
+            results = [
+                    {
+                        "device": x["device"],
+                        "status": "SUCCESS" if x["status"] else str(x["error"])
+                    } for x in devices
+                ]
+            print_table(results, {"Device": "device", "Status": "status"})
 
         asyncio.get_event_loop().run_until_complete(mass_ssh())
