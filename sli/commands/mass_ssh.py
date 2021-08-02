@@ -130,7 +130,10 @@ class MassSSH(BaseCommand):
         try:
             await client.connect()
             dev_obj["output"] = await client.run_command_script(script, out_file=out_file)
-            dev_obj["status"] = True
+            if client.has_error:
+                dev_obj["error"] = client.error
+            else:
+                dev_obj["status"] = True
         except OSError:
             dev_obj["error"] = "Unable to connect to device"
         except PermissionDenied:

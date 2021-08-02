@@ -17,6 +17,7 @@ class AsyncSSHSession:
         self.prompt = None
         self.hostname = None
         self.has_error = False
+        self.error = None
 
     async def connect(self):
         self.client = await asyncssh.connect(
@@ -68,6 +69,7 @@ class AsyncSSHSession:
         for line in lines:
             if line.startswith("Unknown command:"):
                 self.has_error = True
+                self.error = line
 
     async def recv_until_prompt(self, echo=False):
         """
