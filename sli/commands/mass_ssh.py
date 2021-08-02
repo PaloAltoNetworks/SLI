@@ -90,6 +90,22 @@ class MassSSH(BaseCommand):
 
         return devices
 
+    def load_config_from_list(self, out_directory):
+        """
+        Create configuration object based on users CLI input
+        """
+        username, password = self.get_credentials()
+        return [{
+                    "device": x,
+                    "username": username,
+                    "password": password,
+                    "out_file": f"{os.path.join(out_directory,x)}.txt" if out_directory else None,
+                    "coroutine": None,
+                    "status": False,
+                    "output": None,
+                    "error": "",
+                } for x in self.args[1].split(",")]
+
     @staticmethod
     async def ssh_coroutine(device, username, password, out_file, script, dev_obj):
         """
@@ -109,9 +125,8 @@ class MassSSH(BaseCommand):
 
     async def mass_ssh(self, script, out_directory, devices):
         """
-        Gather individual coroutines
+        Run gather on individual coroutines
         """
-
         # Gather and start coroutines
         tasks = [x["coroutine"] for x in devices]
         print(f"Starting SSH to {len(devices)} devices")
@@ -126,28 +141,18 @@ class MassSSH(BaseCommand):
         with open(self.args[0], "r") as f:
             script = f.read()
 
+        # Create output directory if doesn't exist
         out_directory = self.sli.options.get("out_file", None)
         if out_directory:
             if not os.path.exists(out_directory):
                 os.mkdir(out_directory)
 
+        # Load devices configuration from YAML or CLI input
         devices = None
         if re.match(r".*\.y.*ml$", self.args[1]):
             devices = self.load_config_from_yaml(out_directory)
-
         else:
-            # Assemble devices from comma seperated list
-            username, password = self.get_credentials()
-            devices = [{
-                        "device": x,
-                        "username": username,
-                        "password": password,
-                        "out_file": f"{os.path.join(out_directory,x)}.txt" if out_directory else None,
-                        "coroutine": None,
-                        "status": False,
-                        "output": None,
-                        "error": "",
-                    } for x in self.args[1].split(",")]
+            devices = self.load_config_from_list(out_directory)
 
         # Populate devices objects with coroutines
         for dev in devices:
