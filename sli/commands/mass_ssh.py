@@ -90,89 +90,95 @@ class MassSSH(BaseCommand):
 
         return devices
 
+    @staticmethod
+    async def ssh_coroutine(device, username, password, out_file, script, dev_obj):
+        """
+        Per device coroutine
+        """
+        client = AsyncSSHSession(device, username, password)
+        try:
+            await client.connect()
+            dev_obj["output"] = await client.run_command_script(script, out_file=out_file)
+            dev_obj["status"] = True
+        except OSError:
+            dev_obj["error"] = "Unable to connect to device"
+        except PermissionDenied:
+            dev_obj["error"] = "Device rejected login"
+        except Exception as e:
+            dev_obj["error"] = e
+
+    async def mass_ssh(self, script, out_directory, devices):
+        """
+        Gather individual coroutines
+        """
+
+        # Gather and start coroutines
+        tasks = [x["coroutine"] for x in devices]
+        print(f"Starting SSH to {len(devices)} devices")
+        await asyncio.gather(*tasks, return_exceptions=True)
+
     def run(self):
 
-        async def ssh_coroutine(device, username, password, out_file, script, dev_obj):
-            """
-            Per device coroutine
-            """
-            client = AsyncSSHSession(device, username, password)
-            try:
-                await client.connect()
-                dev_obj["output"] = await client.run_command_script(script, out_file=out_file)
-                dev_obj["status"] = True
-            except OSError:
-                dev_obj["error"] = "Unable to connect to device"
-            except PermissionDenied:
-                dev_obj["error"] = "Device rejected login"
-            except Exception as e:
-                dev_obj["error"] = e
+        if not len(self.args) == 2:
+            print(self.help_text)
+            return
 
-        async def mass_ssh():
-            """
-            Gather individual coroutines
-            """
+        with open(self.args[0], "r") as f:
+            script = f.read()
 
-            if not len(self.args) == 2:
-                print(self.help_text)
-                return
+        out_directory = self.sli.options.get("out_file", None)
+        if out_directory:
+            if not os.path.exists(out_directory):
+                os.mkdir(out_directory)
 
-            with open(self.args[0], "r") as f:
-                script = f.read()
+        devices = None
+        if re.match(r".*\.y.*ml$", self.args[1]):
+            devices = self.load_config_from_yaml(out_directory)
 
-            out_directory = self.sli.options.get("out_file", None)
-            if out_directory:
-                if not os.path.exists(out_directory):
-                    os.mkdir(out_directory)
+        else:
+            # Assemble devices from comma seperated list
+            username, password = self.get_credentials()
+            devices = [{
+                        "device": x,
+                        "username": username,
+                        "password": password,
+                        "out_file": f"{os.path.join(out_directory,x)}.txt" if out_directory else None,
+                        "coroutine": None,
+                        "status": False,
+                        "output": None,
+                        "error": "",
+                    } for x in self.args[1].split(",")]
 
-            devices = None
-            if re.match(r".*\.y.*ml$", self.args[1]):
-                devices = self.load_config_from_yaml(out_directory)
+        # Populate devices objects with coroutines
+        for dev in devices:
+            dev["coroutine"] = self.ssh_coroutine(
+                dev["device"],
+                dev["username"],
+                dev["password"],
+                dev["out_file"],
+                script,
+                dev
+            )
 
-            else:
-                # Assemble devices from comma seperated list
-                username, password = self.get_credentials()
-                devices = [{
-                            "device": x,
-                            "username": username,
-                            "password": password,
-                            "out_file": f"{os.path.join(out_directory,x)}.txt" if out_directory else None,
-                            "coroutine": None,
-                            "status": False,
-                            "output": None,
-                            "error": "",
-                        } for x in self.args[1].split(",")]
+        # Execute SSH sessions
+        asyncio.get_event_loop().run_until_complete(self.mass_ssh(
+            script,
+            out_directory,
+            devices
+        ))
 
-            # Populate devices objects with coroutines
+        # If not saving to file, print device output
+        if not out_directory:
             for dev in devices:
-                dev["coroutine"] = ssh_coroutine(
-                    dev["device"],
-                    dev["username"],
-                    dev["password"],
-                    dev["out_file"],
-                    script,
-                    dev
-                )
+                if dev["status"]:
+                    print(f"{dev['device']}\n{'-'*len(dev['device'])}")
+                    print(dev["output"])
 
-            # Gather and start coroutines
-            tasks = [x["coroutine"] for x in devices]
-            print(f"Starting SSH to {len(devices)} devices")
-            await asyncio.gather(*tasks, return_exceptions=True)
-
-            # If not saving to file, print device output
-            if not out_directory:
-                for dev in devices:
-                    if dev["status"]:
-                        print(f"{dev['device']}\n{'-'*len(dev['device'])}")
-                        print(dev["output"])
-
-            # Print results from all devices
-            results = [
-                    {
-                        "device": x["device"],
-                        "status": "SUCCESS" if x["status"] else str(x["error"])
-                    } for x in devices
-                ]
-            print_table(results, {"Device": "device", "Status": "status"})
-
-        asyncio.get_event_loop().run_until_complete(mass_ssh())
+        # Print results from all devices
+        results = [
+                {
+                    "device": x["device"],
+                    "status": "SUCCESS" if x["status"] else str(x["error"])
+                } for x in devices
+            ]
+        print_table(results, {"Device": "device", "Status": "status"})
