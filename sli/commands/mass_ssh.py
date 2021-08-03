@@ -56,7 +56,7 @@ class MassSSH(BaseCommand):
         data gathering on a list of devices simultaneously
 
         Usage:
-            sli mass_ssh -u username -p password -o output_dir script.txt [comma-seperated-devices | config.yaml]
+            sli mass_ssh -u username -p password -o output_dir script.txt [comma-separated-devices | config.yaml]
     """
 
     def get_credentials(self):
