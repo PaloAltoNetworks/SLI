@@ -17,7 +17,7 @@ class LicenseCommand(BaseCommand):
         sli license_activate IBADCODE
 
     Example: Activate an auth-code and use credentials stored in the context
-        sli licese_activate IBADCODE -uc
+        sli license_activate IBADCODE -uc
  
     """
 

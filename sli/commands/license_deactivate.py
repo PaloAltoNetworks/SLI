@@ -23,6 +23,7 @@ class LicenseDeactivateCommand(BaseCommand):
         sli license_deactivate -uc
 
     """
+
     @require_ngfw_connection_params
     @require_panoply_connection
     def run(self, pan: Panoply):
