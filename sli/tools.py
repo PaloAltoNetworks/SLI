@@ -526,3 +526,14 @@ def load_app_skillet(skillet_name) -> Skillet:
     if not app_skillet:
         raise AppSkilletNotFoundException("Could not find required resources")
     return app_skillet
+
+
+def load_builtin_skillets() -> list:
+    """
+    Returns a list of sli builtin skillets in the app_skillets folder
+
+    :return: list of Skillets
+    """
+    sli_path = Path(__file__).parent.joinpath("app_skillets").resolve()
+    inline_sl = SkilletLoader(sli_path)
+    return [x for x in inline_sl.skillets if x.label.startswith("builtin_")]

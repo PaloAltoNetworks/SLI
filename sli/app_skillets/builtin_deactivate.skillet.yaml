@@ -1,0 +1,17 @@
+name: builtin_device_cert
+label: builtin_device_cert
+description: Request a device certificate using an OTP from the CSP
+
+type: panos
+
+variables:
+  - name: otp
+    type_hint: text
+    description: One Time Password
+    default: otp
+
+snippets:
+
+  - name: template_data
+    cmd: op
+    cmd_str: <request><certificate><fetch><otp>{{ otp }}</otp></fetch></certificate></request>

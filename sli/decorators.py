@@ -110,6 +110,15 @@ def require_single_skillet(func):
         target_name = (
             command.sli.options.get("name") if command.sli.options.get("name") else command.sli.skillets[0].name
         )
+
+        # Check if skillet with target_name already loaded
+        if target_name:
+            name_match = [x for x in command.sli.skillets if x.name == target_name]
+            if len(name_match) == 1:
+                command.sli.skillet = name_match[0]
+                return func(command)
+
+        # Use skillet loader to find target skillet
         command.sli.skillet = command.sli.sl.get_skillet_with_name(target_name)
         if command.sli.skillet is None:
             print(f"Unable to load skillet {target_name} by name")
