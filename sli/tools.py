@@ -19,6 +19,10 @@ def get_var(var, args, context, options={}):
     if var['name'] in args:
         # First order of preference is to use a CLI provided parameter
         context[var['name']] = args[var['name']]
+    elif var['name'] in os.environ:
+        # Second order of preference is to use an environment variable
+        context[var['name']] = os.environ.get(var['name'])
+
     else:
         # If input has not yet been supplied, get it from the user
         context.update(get_variable_input(var, context, defaults=options.get("defaults", False)))
