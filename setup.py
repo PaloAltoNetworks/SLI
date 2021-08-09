@@ -28,6 +28,7 @@ setuptools.setup(
         'paramiko',
         'requests',
         'xlsxwriter',
+        'asyncssh',
     ],
     entry_points={
         'console_scripts': [
