@@ -121,6 +121,17 @@ class MassSSH(BaseCommand):
                     "error": "",
                 } for x in self.args[1].split(",")]
 
+    def load_device_configs(self, out_directory, pan=None):
+        """
+        Loads device configuration using YAML file or CLI-inputted list
+        """
+        devices = None
+        if re.match(r".*\.y.*ml$", self.args[1]):
+            devices = self.load_config_from_yaml(out_directory)
+        else:
+            devices = self.load_config_from_list(out_directory)
+        return devices
+
     @staticmethod
     async def ssh_coroutine(device, username, password, out_file, script, dev_obj):
         """
@@ -141,7 +152,7 @@ class MassSSH(BaseCommand):
         except Exception as e:
             dev_obj["error"] = e
 
-    async def mass_ssh(self, devices):
+    async def gather_ssh_tasks(self, devices):
         """
         Run gather on individual coroutines
         """
@@ -150,28 +161,10 @@ class MassSSH(BaseCommand):
         print(f"Starting SSH to {len(devices)} devices")
         await asyncio.gather(*tasks, return_exceptions=True)
 
-    def run(self):
-
-        if not len(self.args) == 2:
-            print(self.help_text)
-            return
-
-        with open(self.args[0], "r") as f:
-            script = f.read()
-
-        # Create output directory if doesn't exist
-        out_directory = self.sli.options.get("out_file", None)
-        if out_directory:
-            if not os.path.exists(out_directory):
-                os.mkdir(out_directory)
-
-        # Load devices configuration from YAML or CLI input
-        devices = None
-        if re.match(r".*\.y.*ml$", self.args[1]):
-            devices = self.load_config_from_yaml(out_directory)
-        else:
-            devices = self.load_config_from_list(out_directory)
-
+    def execute_mass_ssh(self, script, out_directory, devices):
+        """
+        Executes ascyncIO entry point function and prints results to stdout
+        """
         # Populate devices objects with coroutines
         for dev in devices:
             dev["coroutine"] = self.ssh_coroutine(
@@ -184,7 +177,7 @@ class MassSSH(BaseCommand):
             )
 
         # Execute SSH sessions
-        asyncio.get_event_loop().run_until_complete(self.mass_ssh(devices))
+        asyncio.get_event_loop().run_until_complete(self.gather_ssh_tasks(devices))
 
         # If not saving to file, print device output
         if not out_directory:
@@ -201,3 +194,25 @@ class MassSSH(BaseCommand):
                 } for x in devices
             ]
         print_table(results, {"Device": "device", "Status": "status"})
+
+    def run(self):
+        # Handle invalid input arguments
+        if not len(self.args) == 2:
+            print(self.help_text)
+            return
+
+        # Read in script file
+        with open(self.args[0], "r") as f:
+            script = f.read()
+
+        # Create output directory if doesn't exist
+        out_directory = self.sli.options.get("out_file", None)
+        if out_directory:
+            if not os.path.exists(out_directory):
+                os.mkdir(out_directory)
+
+        # Load devices configuration from YAML or CLI input
+        devices = self.load_device_configs(out_directory)
+
+        # Execute mass SSH
+        self.execute_mass_ssh(script, out_directory, devices)
