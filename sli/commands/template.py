@@ -20,7 +20,7 @@ class TemplateCommand(BaseCommand):
         specified, the current working directory will be used.
 
         Usage:
-            sli template -n template_name out_directory
+            sli template -n template_name -o out_file
 """
 
     @require_single_skillet
@@ -28,13 +28,9 @@ class TemplateCommand(BaseCommand):
     @load_variables
     def run(self):
 
-        if len(self.args) > 1:
+        if len(self.args):
             print(self.help_text)
             return
-        elif len(self.args) == 1:
-            out_directory = self.args[0]
-        else:
-            out_directory = ""
 
         output = self.sli.skillet.execute(self.sli.context)
         output = output["template"]
@@ -42,9 +38,8 @@ class TemplateCommand(BaseCommand):
         out_file = self.sli.options.get("out_file", False)
         if out_file:
 
-            out_path = os.path.sep.join([out_directory, out_file]) if len(out_directory) else out_file
-            with open(out_path, 'w') as f:
+            with open(out_file, 'w') as f:
                 f.write(output)
-            print(f"Template written to {out_path}")
+            print(f"Template written to {out_file}")
         else:
             print(output)
