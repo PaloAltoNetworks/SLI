@@ -14,8 +14,8 @@ class LicenseDeactivateCommand(BaseCommand):
             De-activate an Auth Code on a PAN-OS VM-Series
 
     Example: De-activate an auth-code and be prompted for device credentials
-        sli license_deactivate 
-    
+        sli license_deactivate
+
     Example: De-activate an auth-code using a Support Licensing API Key
         sli license_deactivate 78A00AB9-442F-48AE-A9FE-AFA369CE93D2
 

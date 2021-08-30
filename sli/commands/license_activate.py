@@ -18,7 +18,7 @@ class LicenseCommand(BaseCommand):
 
     Example: Activate an auth-code and use credentials stored in the context
         sli license_activate IBADCODE -uc
- 
+
     """
 
     @require_ngfw_connection_params

@@ -1,5 +1,3 @@
-from getpass import getpass
-
 from skilletlib.exceptions import TargetConnectionException
 from skilletlib.panoply import Panoply
 
@@ -39,4 +37,3 @@ class ConnectCommand(BaseCommand):
 
         sw_version = pan.facts["sw-version"]
         print(f"Connected to device: {target_ip} running PAN-OS: {sw_version}")
-

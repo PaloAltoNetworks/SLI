@@ -3,8 +3,6 @@ from sli.decorators import require_single_skillet
 from sli.decorators import require_skillet_type
 from .base import BaseCommand
 
-import os
-
 """
 Render a template and save it to a file
 """
