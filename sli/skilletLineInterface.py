@@ -1,11 +1,16 @@
 from skilletlib import Skillet
 from skilletlib import SkilletLoader
 from inspect import isclass
-from sli import commands
 from types import ModuleType
+import traceback
 
+from sli import commands
 from sli.contextManager import ContextManager
 from sli.commands.base import BaseCommand
+from sli.errors import InvalidArgumentsException, SLIException, SLILoaderError
+from sli.tools import store_traceback
+
+from skilletlib.exceptions import LoginException, TargetConnectionException
 
 
 class SkilletLineInterface:
@@ -76,8 +81,7 @@ class SkilletLineInterface:
     def _verify_command(self):
         """Called in __init__ to verify a submitted command is valid before running SkilletLoader"""
         if self.action not in self.command_map:
-            print('Invalid action, run "sli --help" for list of available actions')
-            exit(1)
+            raise InvalidArgumentsException('Invalid action, run "sli --help" for list of available actions')
 
     def _load_skillets(self):
         """Called in __init__ to front end SkilletLoader"""
@@ -88,14 +92,13 @@ class SkilletLineInterface:
                 for key in err:
                     print(f"   {key} - {err[key]}")
             if self.loader_error:
-                raise Exception("SkilletLoader encountered errors")
+                raise SLILoaderError("SkilletLoader encountered errors")
 
     def _verify_loaded_skillets(self):
         """Perform any pre-execution validations against loaded skillets"""
 
         if len(self.skillets) < 1:
-            print("No skillets were loaded.")
-            exit(1)
+            raise SLIException("No skillets were loaded.")
 
     @classmethod
     def get_commands(self):
@@ -109,10 +112,21 @@ class SkilletLineInterface:
         """Run supplied SLI command"""
 
         action_obj = self.command_map[self.action](self)
-        if self.options.get("debug"):
-            action_obj.execute_debug()
-        else:
-            action_obj.execute()
+        run_func = action_obj.execute_debug if self.options.get("debug") else action_obj.execute
+        try:
+            run_func()
+        except SLILoaderError as sl_exc:
+            raise sl_exc
+        except (LoginException, TargetConnectionException) as exc:
+            print(f"Login error: {exc}")
+            if self.options.get("raise_exception"):
+                raise exc
+        except Exception as exc:
+            if self.options.get("raise_exception"):
+                raise exc
+            else:
+                print(f"Error: {exc}")
+                store_traceback(traceback.format_exc())
 
         # Update context with new keys from skillet run
         if not self.no_context:
@@ -122,6 +136,3 @@ class SkilletLineInterface:
                     if key not in ["loop", "loop_index"]:
                         self.context[key] = skillet_context[key]
             self.cm.save_context(self.context)
-
-        # Clean run, normal exit
-        exit(0)

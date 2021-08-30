@@ -210,3 +210,14 @@ sli diff -uc -o out.skillet.yaml -of skillet
 # This command gets the device credentials from the default context, runs a diff and outputs the config diff between the running and candidate versions of your NGFW. The outputted diff is in set command format.
 sli diff -uc -of set running candidate 
 ```
+
+## Programmability
+
+SLI is designed as a standalone application but can also be easily integrated into python programs usling sli_api and your existing sli commands.
+
+``` python
+from sli.sli_api import sli_command
+
+sli_command("sli configure -n my.skillet.yaml -sd /skillet/dir -uc -re")
+```
+The -re flag (--raise-exception), raises exceptions to be handled by the calling program. Without it SLI will print the error and not raise an exception. This flag also applies to the standalone application.

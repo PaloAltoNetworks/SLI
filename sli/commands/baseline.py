@@ -1,5 +1,4 @@
 from skilletlib import Panoply
-from skilletlib.exceptions import PanoplyException
 
 from .base import BaseCommand
 from ..decorators import require_ngfw_connection_params
@@ -14,20 +13,16 @@ class BaselineCommand(BaseCommand):
     @require_ngfw_connection_params
     @require_panoply_connection
     def run(self, pan: Panoply):
-        try:
-            saved_configs = pan.list_saved_configurations()
-            if "skillet_baseline.xml" in saved_configs:
-                pan.load_config("skillet_baseline.xml")
-            else:
-                pan.load_baseline()
 
-            print(f'Successfully reverted {self.sli.context["TARGET_IP"]} to baseline config.')
+        saved_configs = pan.list_saved_configurations()
+        if "skillet_baseline.xml" in saved_configs:
+            pan.load_config("skillet_baseline.xml")
+        else:
+            pan.load_baseline()
 
-            if self.sli.commit:
-                print("Committing configuration...")
-                pan.commit()
-                print("Success...")
+        print(f'Successfully reverted {self.sli.context["TARGET_IP"]} to baseline config.')
 
-        except PanoplyException as pe:
-            print(pe)
-            exit(1)
+        if self.sli.commit:
+            print("Committing configuration...")
+            pan.commit()
+            print("Success...")

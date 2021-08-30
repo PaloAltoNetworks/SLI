@@ -2,8 +2,10 @@ from getpass import getpass
 from skilletlib.panoply import Panoply
 from sli.tools import get_var
 from sli.ssh import SSHSession
+from sli.errors import InvalidArgumentsException
 from lxml import etree
-from skilletlib.exceptions import LoginException, TargetConnectionException
+from skilletlib.exceptions import TargetConnectionException
+from skilletlib.exceptions import SkilletLoaderException
 
 
 def require_ngfw_connection_params(func):
@@ -26,11 +28,8 @@ def require_panoply_connection(func):
     """
 
     def wrap(command):
-        try:
-            pan = get_panoply_from_context(command)
-            return func(command, pan)
-        except (LoginException, TargetConnectionException) as e:
-            print(f"Login error: {e}")
+        pan = get_panoply_from_context(command)
+        return func(command, pan)
 
     return wrap
 
@@ -102,18 +101,16 @@ def require_single_skillet(func):
 
     def wrap(command):
         if not command.sli.options.get("name") and len(command.sli.skillets) > 1:
-            print(
+            raise InvalidArgumentsException(
                 f"Specify a skillet to run with --name or -n when more than 1 is present for command {command.sli_command}"
             )
-            exit(1)
 
         target_name = (
             command.sli.options.get("name") if command.sli.options.get("name") else command.sli.skillets[0].name
         )
         command.sli.skillet = command.sli.sl.get_skillet_with_name(target_name)
         if command.sli.skillet is None:
-            print(f"Unable to load skillet {target_name} by name")
-            exit(1)
+            raise SkilletLoaderException(f"Unable to load skillet {target_name} by name")
         return func(command)
 
     return wrap
@@ -129,10 +126,9 @@ def require_skillet_type(*args):
         def wrap(command):
             skillet_type = command.sli.skillet.type
             if skillet_type not in args:
-                print(
+                raise InvalidArgumentsException(
                     f'Invalid type of skillet ({skillet_type}) for command {command.sli_command}, requires one of: {", ".join(args)}'
                 )
-                exit(1)
             return func(command)
 
         return wrap
