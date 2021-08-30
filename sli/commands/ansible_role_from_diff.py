@@ -108,8 +108,7 @@ class AnsibleRoleCommand(DiffCommand):
         :return: None
         """
         if not len(snippets):
-            print("No Configuration diffs found! Try a different combination of configuration sources")
-            exit(1)
+            raise SLIException("No Configuration diffs found! Try a different combination of configuration sources")
 
         namespace = get_input("Namespace", "pan_community")
         role_name = get_input("Role Name", "generated_role")

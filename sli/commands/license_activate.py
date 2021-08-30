@@ -1,9 +1,10 @@
 from skilletlib import Panoply
-from skilletlib.exceptions import PanoplyException
 
 from .base import BaseCommand
 from ..decorators import require_ngfw_connection_params
 from ..decorators import require_panoply_connection
+
+from sli.errors import SLIException, InvalidArgumentsException
 
 
 class LicenseCommand(BaseCommand):
@@ -27,14 +28,7 @@ class LicenseCommand(BaseCommand):
 
         auth_code = self.args[0]
         if not auth_code:
-            print("You must supply an Auth-Code to license this PAN-OS Device")
-            exit(1)
-        try:
-            if not pan.fetch_license(auth_code=auth_code):
-                print("Could not apply auth-code!")
-                print(pan.xapi.status_detail)
-                exit(1)
-
-        except PanoplyException as pe:
-            print(pe)
-            exit(1)
+            raise InvalidArgumentsException("You must supply an Auth-Code to license this PAN-OS Device")
+        if not pan.fetch_license(auth_code=auth_code):
+            print(pan.xapi.status_detail)
+            raise SLIException("Could not apply auth-code!")

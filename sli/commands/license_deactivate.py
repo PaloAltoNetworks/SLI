@@ -1,9 +1,10 @@
 from skilletlib import Panoply
-from skilletlib.exceptions import PanoplyException
 
 from .base import BaseCommand
 from ..decorators import require_ngfw_connection_params
 from ..decorators import require_panoply_connection
+
+from sli.errors import SLIException
 
 
 class LicenseDeactivateCommand(BaseCommand):
@@ -33,14 +34,8 @@ class LicenseDeactivateCommand(BaseCommand):
             # do not accept blank str here, must be None
             api_key = None
 
-        try:
-            if not pan.deactivate_vm_license(api_key=api_key):
-                print("Could not deactivate VM-Series!")
-                print(pan.xapi.status_detail)
-                exit(1)
+        if not pan.deactivate_vm_license(api_key=api_key):
+            print(pan.xapi.status_detail)
+            raise SLIException("Could not deactivate VM-Series!")
 
-            print("VM-Series license de-activated")
-
-        except PanoplyException as pe:
-            print(pe)
-            exit(1)
+        print("VM-Series license de-activated")

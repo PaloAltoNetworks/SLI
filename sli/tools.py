@@ -333,6 +333,20 @@ def expandedHomePath(directory):
     return expanduser("~") + os.path.sep + os.path.sep.join(directory.strip().split('/'))
 
 
+def store_traceback(tb):
+    """
+    Attempt to store a given traceback (tb) in ~/.sli/traceback.txt
+    """
+    try:
+        target = expandedHomePath(".sli/traceback.txt")
+        if os.path.exists(target):
+            os.remove(target)
+        with open(target, "w") as f:
+            f.write(tb)
+    except Exception:
+        pass
+
+
 def merge_children(config, xml):
     """
     Merge a child xml object into an existing xml config object.
