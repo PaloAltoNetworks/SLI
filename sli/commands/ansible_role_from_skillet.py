@@ -2,7 +2,6 @@ from .ansible_role_from_diff import AnsibleRoleCommand
 from ..decorators import require_single_skillet
 from ..decorators import require_skillet_type
 from ..errors import InvalidArgumentsException
-from ..errors import SLIException
 from ..tools import get_input
 
 
@@ -56,12 +55,7 @@ class SkilletToAnsibleRoleCommand(AnsibleRoleCommand):
             self._print_usage()
             return
 
-        try:
-            diff = self._get_snippets()
-            variable_list = self._get_vars()
-            self._update_context(diff)
-            self._handle_snippets(diff, variable_list)
-
-        except SLIException as sle:
-            print(sle)
-            exit(1)
+        diff = self._get_snippets()
+        variable_list = self._get_vars()
+        self._update_context(diff)
+        self._handle_snippets(diff, variable_list)

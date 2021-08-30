@@ -1,5 +1,3 @@
-from skilletlib.exceptions import PanoplyException
-
 from sli.decorators import require_ngfw_connection_params
 from sli.decorators import require_panoply_connection
 from .base import BaseCommand
@@ -177,16 +175,7 @@ class DiffCommand(BaseCommand):
             self._print_usage()
             return
 
-        try:
-            diff = self._get_snippets()
-            vars_list = self._get_vars()
-            self._update_context(diff)
-            self._handle_snippets(diff, vars_list)
-
-        except PanoplyException as pe:
-            print(pe)
-            exit(1)
-
-        except SLIException as sle:
-            print(sle)
-            exit(1)
+        diff = self._get_snippets()
+        vars_list = self._get_vars()
+        self._update_context(diff)
+        self._handle_snippets(diff, vars_list)

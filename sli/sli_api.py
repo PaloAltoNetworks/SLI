@@ -53,4 +53,4 @@ def sli_command(command):
             sys.argv.append(c)
     if in_arg:
         raise InvalidArgumentsException("No closing quote found in SLI arguments")
-    cli()
+    cli(standalone_mode=False)

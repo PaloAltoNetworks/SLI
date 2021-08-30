@@ -28,7 +28,7 @@ class LoadSet(BaseCommand):
         # Load script as a list of lines off of disk
         if not len(self.args) == 1:
             print(self.help_text)
-            exit()
+            return
         script_name = self.args[0]
         with open(script_name, 'r') as f:
             script = [x.strip() for x in f.read().split('\n')]
