@@ -16,11 +16,11 @@ publish:
         - python3 -m pip install --user --upgrade twine
         - python3 -m twine upload dist/* -u __token__ -p $PYPI_TOKEN
 
-publish:
+checksetup:
     only:
         - tags
-    stage: publish
+    stage: checksetup
     image: python:3.9
     script:
-        - setup -e .
+        - python setup.py install
         - sli
