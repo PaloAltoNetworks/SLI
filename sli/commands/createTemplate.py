@@ -1,5 +1,6 @@
 from .base import BaseCommand
 from sli.decorators import require_single_skillet, require_skillet_type
+from sli.tools import format_xml_string
 
 from lxml import etree
 import re
@@ -132,7 +133,7 @@ class CreateTemplate(BaseCommand):
         temp_file = BytesIO()
         baseline_xml.write(temp_file, pretty_print=True)
         temp_file.seek(0)
-        config = temp_file.read().decode()
+        config = format_xml_string(temp_file.read().decode())
         baseline_xml = etree.fromstring(config)
 
         # Find the various insert points on all snippets
