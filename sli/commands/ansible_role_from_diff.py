@@ -19,7 +19,7 @@ class AnsibleRoleCommand(DiffCommand):
         "previous running, etc"
     )
     no_skillet = True
-    repo_url = "https://gitlab.com/panw-gse/as/pan_community-ansible-collection-skeleton.git"
+    repo_url = "https://github.com/pan-community/pan_community-ansible-collection-skeleton.git"
     help_text = """
         ansible_role module requires 0 to 2 arguments.
 
