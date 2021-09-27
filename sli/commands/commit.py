@@ -15,4 +15,4 @@ class CommitCommand(BaseCommand):
     def run(self, pan: Panoply):
         print("Committing configuration...")
         pan.commit()
-        print("Success...")
+        print("Success")
