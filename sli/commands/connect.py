@@ -14,6 +14,7 @@ class ConnectCommand(BaseCommand):
         self.sli.context.pop("TARGET_IP", "")
         self.sli.context.pop("TARGET_USERNAME", "")
         self.sli.context.pop("TARGET_PASSWORD", "")
+        self.sli.context.pop("TARGET_PORT", "")
         super().execute()
 
     @require_ngfw_connection_params
@@ -22,8 +23,9 @@ class ConnectCommand(BaseCommand):
         target_ip = self.sli.context["TARGET_IP"]
         target_username = self.sli.context["TARGET_USERNAME"]
         target_password = self.sli.context["TARGET_PASSWORD"]
+        target_port = self.sli.context["TARGET_PORT"]
 
-        pan = Panoply(target_ip, target_username, target_password)
+        pan = Panoply(target_ip, target_username, target_password, target_port)
 
         wait = self.sli.options.get("wait")
         if wait:

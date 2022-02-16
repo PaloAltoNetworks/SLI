@@ -10,7 +10,7 @@ from skilletlib.exceptions import SkilletLoaderException
 
 def require_ngfw_connection_params(func):
     """
-    Validate that SLI command has appropriate contexet paramaters
+    Validate that SLI command has appropriate context paramaters
     to facilitate a connection to an NGFW
     """
 
@@ -68,6 +68,7 @@ def require_ngfw_ssh_session(func):
     Decorator to require a connected SSH paramiko session be passed to
     the calling command. The SSH session will already have an invoked shell
     """
+    # Note: -dp option and TARGET_PORT context parameters refer to https api only
 
     def wrap(command):
         print(f"Connecting to {command.sli.context['TARGET_IP']}...")
@@ -149,12 +150,15 @@ def ensure_ngfw_connection_params(command):
     device = command.sli.options.get("device", "")
     username = command.sli.options.get("username", "")
     password = command.sli.options.get("password", "")
+    port = command.sli.options.get("port", "")
     if len(device) > 0:
         command.sli.context["TARGET_IP"] = device
     if len(username) > 0:
         command.sli.context["TARGET_USERNAME"] = username
     if len(password) > 0:
         command.sli.context["TARGET_PASSWORD"] = password
+    if len(port) > 0:
+        command.sli.context["TARGET_PORT"] = port
 
     # If we don't have required input parameters, get them from the user
     if len(command.sli.context.get("TARGET_IP", "")) < 1:
