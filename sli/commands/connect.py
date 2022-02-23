@@ -23,7 +23,7 @@ class ConnectCommand(BaseCommand):
         target_ip = self.sli.context["TARGET_IP"]
         target_username = self.sli.context["TARGET_USERNAME"]
         target_password = self.sli.context["TARGET_PASSWORD"]
-        target_port = self.sli.context["TARGET_PORT"]
+        target_port = self.sli.context.get("TARGET_PORT", 443)
 
         pan = Panoply(target_ip, target_username, target_password, target_port)
 
