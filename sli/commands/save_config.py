@@ -5,7 +5,7 @@ from sli.tools import load_config_file
 
 class ConfigureCommand(BaseCommand):
     sli_command = "save_config"
-    short_desc = "Execute a configuration skillet of type panos"
+    short_desc = "Save a configuration file from a device to your local system"
     no_skillet = True
     help_text = """
     Save a configuration file off a device locally. config_on_device may be
