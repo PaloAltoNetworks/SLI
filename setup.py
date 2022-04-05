@@ -24,6 +24,7 @@ setuptools.setup(
         'skilletlib',
         'panforge',
         'click',
+        'jinja2==3.0.1',
         'pycryptodome',
         'paramiko',
         'requests',
